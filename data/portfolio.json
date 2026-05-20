@@ -1,0 +1,136 @@
+[
+  {
+    "id": "1",
+    "title": "Matera",
+    "category": "Brand Identity",
+    "tags": [
+      "Branding",
+      "Web"
+    ],
+    "year": "2025",
+    "description": "Complete brand overhaul for a sustainable architecture studio. Identity system, website, and brand guidelines.",
+    "gradient": "linear-gradient(135deg, #1a2830 0%, #0a1520 100%)",
+    "featured": true,
+    "url": "https://www.coroflot.com/supanat/MOTUL-Apparel-Collection",
+    "images": [
+      "/uploads/1779244851108-19916661.jpg",
+      "/uploads/1779244928835-9c052cea.jpg",
+      "/uploads/1779244928908-f2b83e9c.jpg",
+      "/uploads/1779244928966-b20e2b4e.jpg"
+    ],
+    "coverImage": "/uploads/1779244851108-19916661.jpg"
+  },
+  {
+    "id": "2",
+    "title": "Silvr",
+    "category": "Web Design",
+    "tags": [
+      "Web",
+      "Motion"
+    ],
+    "year": "2025",
+    "description": "Financial technology platform redesign. Focus on trust, clarity, and conversion optimization.",
+    "gradient": "linear-gradient(135deg, #0e4d4d 0%, #072d2d 100%)",
+    "featured": true,
+    "url": "",
+    "images": [
+      "/uploads/1779255858689-840923cb.jpg",
+      "/uploads/1779255858818-42ddff4e.jpg",
+      "/uploads/1779255858834-9c385838.jpg",
+      "/uploads/1779255858853-2292b336.jpg",
+      "/uploads/1779255858868-411f3cfa.jpg"
+    ],
+    "coverImage": "/uploads/1779255858689-840923cb.jpg"
+  },
+  {
+    "id": "3",
+    "title": "Chance",
+    "category": "Art Direction",
+    "tags": [
+      "Art Direction",
+      "Campaign"
+    ],
+    "year": "2024",
+    "description": "Campaign art direction for a luxury fragrance launch across digital and print channels.",
+    "gradient": "linear-gradient(135deg, #8b3a0f 0%, #4a1a05 100%)",
+    "featured": true
+  },
+  {
+    "id": "4",
+    "title": "Intramuros",
+    "category": "Brand Identity",
+    "tags": [
+      "Branding",
+      "Strategy"
+    ],
+    "year": "2024",
+    "description": "Brand strategy and identity for a cultural magazine reimagining local storytelling.",
+    "gradient": "linear-gradient(135deg, #4a1942 0%, #220d1e 100%)",
+    "featured": false
+  },
+  {
+    "id": "5",
+    "title": "Noma",
+    "category": "Web Design",
+    "tags": [
+      "Web",
+      "UI/UX"
+    ],
+    "year": "2024",
+    "description": "Minimal e-commerce experience for a Scandinavian homewares brand. Clean grid, editorial photography.",
+    "gradient": "linear-gradient(135deg, #1c1c1c 0%, #0a0a0a 100%)",
+    "featured": false
+  },
+  {
+    "id": "6",
+    "title": "Soleil",
+    "category": "Art Direction",
+    "tags": [
+      "Art Direction",
+      "Print"
+    ],
+    "year": "2024",
+    "description": "Seasonal lookbook art direction for a Paris-based ready-to-wear label. Photography and layout.",
+    "gradient": "linear-gradient(135deg, #3d2b1f 0%, #1e1208 100%)",
+    "featured": false
+  },
+  {
+    "id": "7",
+    "title": "Forma",
+    "category": "Brand Identity",
+    "tags": [
+      "Branding",
+      "Motion"
+    ],
+    "year": "2023",
+    "description": "Dynamic identity system for an architecture collective. Modular logo, type system, and motion guidelines.",
+    "gradient": "linear-gradient(135deg, #0d1f3c 0%, #060d1a 100%)",
+    "featured": false
+  },
+  {
+    "id": "8",
+    "title": "Drift",
+    "category": "Web Design",
+    "tags": [
+      "Web",
+      "Interaction"
+    ],
+    "year": "2023",
+    "description": "Immersive portfolio site for a multi-disciplinary motion studio. Scroll-driven transitions throughout.",
+    "gradient": "linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%)",
+    "featured": false
+  },
+  {
+    "title": "TEST",
+    "year": "2026",
+    "category": "",
+    "tags": [],
+    "description": "",
+    "url": "",
+    "featured": true,
+    "gradient": "linear-gradient(135deg, #2a1a1a 0%, #180a0a 100%)",
+    "images": [],
+    "coverImage": null,
+    "id": "1779255414856"
+  }
+]

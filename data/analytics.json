@@ -1,0 +1,32 @@
+{
+  "pageViews": 68,
+  "totalLeads": 3,
+  "dailyViews": [
+    {
+      "date": "2026-05-19",
+      "count": 24
+    },
+    {
+      "date": "2026-05-20",
+      "count": 44
+    }
+  ],
+  "monthlyLeads": [
+    {
+      "month": "2026-02",
+      "count": 3
+    },
+    {
+      "month": "2026-03",
+      "count": 5
+    },
+    {
+      "month": "2026-04",
+      "count": 4
+    },
+    {
+      "month": "2026-05",
+      "count": 3
+    }
+  ]
+}

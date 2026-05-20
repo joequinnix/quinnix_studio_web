@@ -1,0 +1,110 @@
+{
+  "brand": {
+    "name": "QUINNIX STUDIO",
+    "tagline": "We craft digital experiences that move people.",
+    "subtagline": "A creative studio building brands and digital products for ambitious companies.",
+    "email": "hello@quinstudio.com",
+    "phone": "+1 (555) 000-0000",
+    "location": "New York · Los Angeles · Remote",
+    "logo": "/uploads/1779245501832-bddacb69.jpg"
+  },
+  "hero": {
+    "headline": "We craft digital experiences that move people.",
+    "subtext": "A boutique creative studio obsessed with craft — building brands, websites, and digital products for companies that want to stand out.",
+    "cta_primary": "Start a project",
+    "cta_secondary": "View our work"
+  },
+  "about": {
+    "headline": "We're a small, mighty studio obsessed with craft.",
+    "body": "Founded with a simple belief: great design is the best business advantage. We partner with ambitious brands at every stage — from early-stage startups finding their voice to established companies reinventing themselves.",
+    "stats": [
+      {
+        "number": "50+",
+        "label": "Projects"
+      },
+      {
+        "number": "35+",
+        "label": "Clients"
+      },
+      {
+        "number": "5",
+        "label": "Years"
+      }
+    ]
+  },
+  "services": [
+    {
+      "number": "01",
+      "title": "Brand Identity & Strategy",
+      "description": "Logo, visual system, brand guidelines, and the strategic positioning that makes it all mean something."
+    },
+    {
+      "number": "02",
+      "title": "Web Design & Development",
+      "description": "Pixel-perfect design and clean code. Sites that are fast, accessible, and built to convert."
+    },
+    {
+      "number": "03",
+      "title": "Art Direction & Storytelling",
+      "description": "Visual language, photography direction, and narrative systems that give your brand a coherent world."
+    },
+    {
+      "number": "04",
+      "title": "Motion & Animation",
+      "description": "Micro-interactions, scroll animations, and full motion packages that bring static design to life."
+    },
+    {
+      "number": "05",
+      "title": "Creative Technology",
+      "description": "Custom digital experiences, interactive installations, and tech-forward concepts that push boundaries."
+    },
+    {
+      "number": "06",
+      "title": "SEO & Content Strategy",
+      "description": "Organic growth through thoughtful content architecture, keyword strategy, and long-form writing."
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Working with this studio completely transformed how we show up online. They understood our vision instantly and delivered beyond expectations.",
+      "author": "Sarah Chen",
+      "company": "Founder, Matera Co.",
+      "initials": "SC"
+    },
+    {
+      "quote": "The attention to detail is unmatched. Every pixel, every word, every interaction — it all feels intentional. Our conversion rate tripled.",
+      "author": "Marcus Williams",
+      "company": "CEO, Silvr Capital",
+      "initials": "MW"
+    },
+    {
+      "quote": "They don't just execute briefs — they bring ideas and push back when something isn't right. That's rare, and exactly what we needed.",
+      "author": "Priya Nair",
+      "company": "Head of Brand, Intramuros",
+      "initials": "PN"
+    }
+  ],
+  "footer": {
+    "links": [
+      "Work",
+      "Services",
+      "About",
+      "Contact"
+    ],
+    "social": [
+      {
+        "name": "Instagram",
+        "url": "#"
+      },
+      {
+        "name": "LinkedIn",
+        "url": "#"
+      },
+      {
+        "name": "Twitter",
+        "url": "#"
+      }
+    ],
+    "copyright": "2026 QUINNIX STUDIO. All rights reserved."
+  }
+}

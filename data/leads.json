@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Test User",
+    "email": "test@test.com",
+    "service": "Web Design",
+    "message": "Test submission",
+    "id": "1779204261753",
+    "date": "2026-05-19T15:24:21.753Z",
+    "status": "new"
+  },
+  {
+    "id": "sample-1",
+    "name": "Alex Johnson",
+    "email": "alex@company.com",
+    "service": "Brand Identity & Strategy",
+    "message": "We're a Series A startup looking to refresh our brand ahead of a big launch. Would love to discuss scope and timeline.",
+    "date": "2026-05-18T10:30:00.000Z",
+    "status": "new"
+  },
+  {
+    "id": "sample-2",
+    "name": "Maria Santos",
+    "email": "maria@venture.co",
+    "service": "Web Design & Development",
+    "message": "Need a complete website rebuild for our consulting firm. Current site is outdated and not converting.",
+    "date": "2026-05-16T14:22:00.000Z",
+    "status": "contacted"
+  }
+]
