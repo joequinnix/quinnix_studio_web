@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -682,6 +681,10 @@
     }
     .form-success.show { display: block; }
 
+    /* ── App Showcase ──────────────────────────────────────────────────── */
+    #showcaseWrap { margin-top: 32px; }
+    #showcaseInner { transition: none; }
+
     /* ── Footer ────────────────────────────────────────────────────────── */
     footer {
       border-top: 1px solid var(--border);
@@ -738,8 +741,11 @@
 
   <!-- Hero -->
   <section id="hero">
-    <canvas id="heroCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
-    <div class="hero-bg" style="z-index:1;"></div>
+    <video id="heroBgVideo" autoplay muted loop playsinline
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:0;">
+      <source src="/videos/hero-bg.mp4" type="video/mp4">
+    </video>
+    <div class="hero-bg" style="z-index:1;background:linear-gradient(to bottom, rgba(8,8,8,0.55) 0%, rgba(8,8,8,0.3) 40%, rgba(8,8,8,0.75) 100%);"></div>
     <div class="container" style="position:relative;z-index:2;">
       <div class="hero-eyebrow">Creative Agency</div>
       <h1 class="hero-headline" id="heroHeadline">
@@ -778,6 +784,18 @@
       <div class="marquee-item">Development <span class="marquee-dot"></span></div>
     </div>
   </div>
+
+  <!-- App Showcase -->
+  <section id="showcase" style="padding:72px 0;background:var(--bg);overflow:hidden;">
+    <div class="container">
+      <div class="section-label">Featured Experience</div>
+    </div>
+    <div id="showcaseWrap" style="position:relative;width:100%;overflow:hidden;">
+      <div id="showcaseInner" style="position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left;will-change:transform;">
+        <!-- composition injected by JS -->
+      </div>
+    </div>
+  </section>
 
   <!-- Work -->
   <section id="work">
@@ -1179,11 +1197,98 @@
 
     // Force-reveal above-fold hero elements immediately so buttons are always clickable
     document.querySelectorAll('#hero .reveal').forEach(el => el.classList.add('visible'));
+
+    // ── App Showcase: inject composition + scale to viewport ──────────────
+    (function initShowcase() {
+      const wrap = document.getElementById('showcaseWrap');
+      const inner = document.getElementById('showcaseInner');
+      if (!wrap || !inner) return;
+
+      // Load composition HTML into inner container
+      fetch('/compositions/app-showcase.html')
+        .then(r => r.text())
+        .then(html => {
+          // Extract just the body content + style + script
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const comp = doc.querySelector('[data-composition-id="app-showcase"]');
+          if (!comp) return;
+          inner.appendChild(comp.cloneNode(true));
+
+          // Move styles into document head — skip global resets (html/body/*) that break the main page
+          doc.querySelectorAll('style').forEach(s => {
+            const css = s.textContent;
+            // Skip style blocks that contain html/body width overrides (composition reset block)
+            if (/(?:html|body)\s*\{[^}]*width\s*:\s*1920px/m.test(css)) return;
+            const st = document.createElement('style');
+            st.textContent = css;
+            document.head.appendChild(st);
+          });
+
+          // Execute scripts — external src scripts must finish loading before inline scripts run
+          const scripts = Array.from(doc.querySelectorAll('script'));
+          const extScripts = scripts.filter(s => s.src);
+          const inlineScripts = scripts.filter(s => !s.src);
+
+          function runInlineScripts() {
+            inlineScripts.forEach(s => {
+              const sc = document.createElement('script');
+              sc.textContent = s.textContent;
+              document.body.appendChild(sc);
+            });
+          }
+
+          if (extScripts.length === 0) {
+            runInlineScripts();
+          } else {
+            let loaded = 0;
+            extScripts.forEach(s => {
+              // skip if already loaded (e.g. GSAP already on page)
+              if (s.src.includes('gsap') && typeof gsap !== 'undefined') {
+                loaded++;
+                if (loaded === extScripts.length) runInlineScripts();
+                return;
+              }
+              const sc = document.createElement('script');
+              sc.src = s.src;
+              sc.onload = () => { loaded++; if (loaded === extScripts.length) runInlineScripts(); };
+              sc.onerror = () => { loaded++; if (loaded === extScripts.length) runInlineScripts(); };
+              document.body.appendChild(sc);
+            });
+          }
+
+          // Scale to fit viewport (use innerWidth — wrap expands to 1920 before transform)
+          function scaleShowcase() {
+            const vw = window.innerWidth;
+            const scale = vw / 1920;
+            inner.style.transform = `scale(${scale})`;
+            wrap.style.height = (1080 * scale) + 'px';
+          }
+          scaleShowcase();
+          window.addEventListener('resize', scaleShowcase);
+
+          // Play timeline when section scrolls into view
+          const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+              if (e.isIntersecting) {
+                setTimeout(() => {
+                  const tl = window.__timelines && window.__timelines['app-showcase'];
+                  if (tl) tl.play(0);
+                }, 200);
+                obs.disconnect();
+              }
+            });
+          }, { threshold: 0.15 });
+          obs.observe(document.getElementById('showcase'));
+        })
+        .catch(() => {}); // silently skip if file missing
+    })();
   </script>
 
   <script>
-  // ── Three.js Hero — dynamic floating objects + particles ─────────────────
+  // ── Three.js Hero — disabled (replaced by Higgsfield video background) ──
   (function initHeroScene() {
+    return; // video bg active
     if (typeof THREE === 'undefined') return;
     const canvas = document.getElementById('heroCanvas');
     const section = document.getElementById('hero');
