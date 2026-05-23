@@ -391,20 +391,25 @@
     #lightbox {
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(0,0,0,0.96);
-      /* flex centers the image; caption sits outside the flex area */
     }
-    #lightbox.open { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #lightbox.open {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 70px 60px 24px; /* top:70px clears the fixed close btn; sides clear arrow btns */
+      overflow-y: auto;        /* safety net — never clip content that overflows */
+      box-sizing: border-box;
+    }
 
-    /* The single image — constrained purely by viewport, nothing clips it */
+    /* The single image — constrained to what's left after padding */
     #lb-main-img {
       display: block;
-      max-width: calc(100vw - 120px);
-      max-height: calc(100vh - 130px); /* 130px = caption area (title+tags+dots ~70px) + 60px top margin */
+      max-width: 100%;                  /* fills the padded column */
+      max-height: calc(100vh - 160px); /* 70px top + 24px bottom + 66px caption = 160px */
       width: auto; height: auto;
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
       transition: opacity 0.25s ease;
-      flex-shrink: 0;
+      flex-shrink: 1;   /* allow shrink on very small viewports */
+      min-height: 0;
     }
     #lb-main-img.fading { opacity: 0; }
 
