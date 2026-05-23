@@ -195,7 +195,7 @@
     .portfolio-card.drag-over { border-color: var(--accent); border-style: dashed; }
     .portfolio-card.dragging { opacity: 0.4; }
     .portfolio-card-thumb { aspect-ratio: 1191 / 842; position: relative; overflow: hidden; background: #0a0a0a; }
-    .portfolio-card-thumb img { position: absolute; inset: 0; object-fit: contain; display: block; }
+    .portfolio-card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
     .drag-handle {
       position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.5);
       border-radius: 4px; padding: 4px 6px; font-size: 11px; color: rgba(255,255,255,0.5);
@@ -239,7 +239,7 @@
       background: #0a0a0a;
     }
     .img-thumb:active { cursor: grabbing; }
-    .img-thumb img { position: absolute; inset: 0; object-fit: contain; display: block; pointer-events: none; }
+    .img-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
     .img-thumb.is-cover { border-color: var(--accent); }
     .img-thumb.img-dragging { opacity: 0.35; transform: scale(0.95); }
     .img-thumb.img-drag-over { border-color: var(--text); box-shadow: 0 0 0 2px var(--text); }
