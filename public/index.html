@@ -350,7 +350,7 @@
       pointer-events: none;
     }
     .carousel-slide.active { opacity: 1; }
-    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: contain; display: block; background: #0a0a0a; }
     .carousel-dots {
       position: absolute;
       bottom: 12px; left: 50%; transform: translateX(-50%);
@@ -417,7 +417,7 @@
     .lb-slide img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: cover; display: block;
+      object-fit: contain; display: block; background: #0a0a0a;
       user-select: none; -webkit-user-drag: none;
     }
     #lightbox-close {
@@ -1146,7 +1146,7 @@
             `<div class="carousel-dot${si === 0 ? ' active' : ''}"></div>`
           ).join('')}</div>`;
         } else if (imgs && imgs.length === 1) {
-          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;">`;
         } else {
           cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#1a1a1a'}"></div>`;
         }
