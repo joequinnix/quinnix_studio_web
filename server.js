@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const { pool, init } = require('./db');
 
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -29,32 +30,12 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const dataDir = path.join(__dirname, 'data');
-
-function readData(file) {
-  try {
-    return JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf8'));
-  } catch {
-    return file.endsWith('.json') && file === 'portfolio.json' ? [] : {};
-  }
-}
-
-function writeData(file, data) {
-  fs.writeFileSync(path.join(dataDir, file), JSON.stringify(data, null, 2));
-}
-
 // In-memory session tokens
 const sessions = new Set();
-
-function generateToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
+function generateToken() { return crypto.randomBytes(32).toString('hex'); }
 function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !sessions.has(token)) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!token || !sessions.has(token)) return res.status(401).json({ error: 'Unauthorized' });
   next();
 }
 
@@ -74,18 +55,24 @@ app.post('/api/auth/logout', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/auth/check', requireAuth, (req, res) => {
-  res.json({ authenticated: true });
-});
+app.get('/api/auth/check', requireAuth, (req, res) => res.json({ authenticated: true }));
 
 // ── Content ───────────────────────────────────────────────────────────────────
-app.get('/api/content', (req, res) => {
-  res.json(readData('content.json'));
+app.get('/api/content', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`SELECT value FROM content WHERE key = 'main'`);
+    res.json(rows[0]?.value || {});
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.put('/api/content', requireAuth, (req, res) => {
-  writeData('content.json', req.body);
-  res.json({ success: true });
+app.put('/api/content', requireAuth, async (req, res) => {
+  try {
+    await pool.query(`
+      INSERT INTO content (key, value) VALUES ('main', $1)
+      ON CONFLICT (key) DO UPDATE SET value = $1
+    `, [JSON.stringify(req.body)]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Image Upload ──────────────────────────────────────────────────────────────
@@ -97,142 +84,186 @@ app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
 app.delete('/api/upload', requireAuth, (req, res) => {
   const { url } = req.body;
   if (!url || !url.startsWith('/uploads/')) return res.status(400).json({ error: 'Invalid url' });
-  const file = path.join(__dirname, 'public', url);
-  try { fs.unlinkSync(file); } catch {}
+  try { fs.unlinkSync(path.join(__dirname, 'public', url)); } catch {}
   res.json({ success: true });
 });
 
 // ── Portfolio ─────────────────────────────────────────────────────────────────
-app.get('/api/portfolio', (req, res) => {
-  res.json(readData('portfolio.json'));
+function rowToProject(r) {
+  return {
+    id: r.id, title: r.title, category: r.category,
+    tags: r.tags || [], year: r.year, description: r.description,
+    gradient: r.gradient, featured: r.featured, url: r.url,
+    images: r.images || [], coverImage: r.cover_image
+  };
+}
+
+app.get('/api/portfolio', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`SELECT * FROM portfolio ORDER BY sort_order ASC, id ASC`);
+    res.json(rows.map(rowToProject));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/portfolio', requireAuth, (req, res) => {
-  const items = readData('portfolio.json');
-  const item = { ...req.body, id: Date.now().toString() };
-  items.push(item);
-  writeData('portfolio.json', items);
-  res.json(item);
+app.post('/api/portfolio', requireAuth, async (req, res) => {
+  try {
+    const { title='', category='', tags=[], year='', description='', gradient='', featured=false, url='', images=[], coverImage='' } = req.body;
+    const id = Date.now().toString();
+    const { rows: maxRows } = await pool.query(`SELECT COALESCE(MAX(sort_order),0)+1 AS next FROM portfolio`);
+    const sort_order = maxRows[0].next;
+    const { rows } = await pool.query(`
+      INSERT INTO portfolio (id, title, category, tags, year, description, gradient, featured, url, images, cover_image, sort_order)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *
+    `, [id, title, category, JSON.stringify(tags), year, description, gradient, featured, url, JSON.stringify(images), coverImage, sort_order]);
+    res.json(rowToProject(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.put('/api/portfolio/reorder', requireAuth, (req, res) => {
-  const { order } = req.body;
-  if (!Array.isArray(order)) return res.status(400).json({ error: 'order must be array' });
-  const items = readData('portfolio.json');
-  const reordered = order.map(id => items.find(p => p.id === id)).filter(Boolean);
-  const rest = items.filter(p => !order.includes(p.id));
-  writeData('portfolio.json', [...reordered, ...rest]);
-  res.json({ success: true });
+app.put('/api/portfolio/reorder', requireAuth, async (req, res) => {
+  try {
+    const { order } = req.body;
+    if (!Array.isArray(order)) return res.status(400).json({ error: 'order must be array' });
+    for (let i = 0; i < order.length; i++) {
+      await pool.query(`UPDATE portfolio SET sort_order = $1 WHERE id = $2`, [i, order[i]]);
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/portfolio/:id/duplicate', requireAuth, (req, res) => {
-  const items = readData('portfolio.json');
-  const src = items.find(p => p.id === req.params.id);
-  if (!src) return res.status(404).json({ error: 'Not found' });
-  const copy = { ...src, id: Date.now().toString(), title: src.title + ' (Copy)', featured: false };
-  items.push(copy);
-  writeData('portfolio.json', items);
-  res.json(copy);
+app.post('/api/portfolio/:id/duplicate', requireAuth, async (req, res) => {
+  try {
+    const { rows: src } = await pool.query(`SELECT * FROM portfolio WHERE id = $1`, [req.params.id]);
+    if (!src.length) return res.status(404).json({ error: 'Not found' });
+    const p = src[0];
+    const newId = Date.now().toString();
+    const { rows } = await pool.query(`
+      INSERT INTO portfolio (id, title, category, tags, year, description, gradient, featured, url, images, cover_image, sort_order)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *
+    `, [newId, p.title+' (Copy)', p.category, JSON.stringify(p.tags), p.year, p.description, p.gradient, false, p.url, JSON.stringify(p.images), p.cover_image, p.sort_order+1]);
+    res.json(rowToProject(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.put('/api/portfolio/:id', requireAuth, (req, res) => {
-  const items = readData('portfolio.json');
-  const idx = items.findIndex(p => p.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  items[idx] = { ...items[idx], ...req.body };
-  writeData('portfolio.json', items);
-  res.json(items[idx]);
+app.put('/api/portfolio/:id', requireAuth, async (req, res) => {
+  try {
+    const { title, category, tags, year, description, gradient, featured, url, images, coverImage } = req.body;
+    const { rows } = await pool.query(`
+      UPDATE portfolio SET
+        title = COALESCE($2, title),
+        category = COALESCE($3, category),
+        tags = COALESCE($4, tags),
+        year = COALESCE($5, year),
+        description = COALESCE($6, description),
+        gradient = COALESCE($7, gradient),
+        featured = COALESCE($8, featured),
+        url = COALESCE($9, url),
+        images = COALESCE($10, images),
+        cover_image = COALESCE($11, cover_image)
+      WHERE id = $1 RETURNING *
+    `, [req.params.id, title, category, tags ? JSON.stringify(tags) : null, year, description, gradient, featured, url, images ? JSON.stringify(images) : null, coverImage]);
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rowToProject(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/portfolio/:id', requireAuth, (req, res) => {
-  const items = readData('portfolio.json');
-  writeData('portfolio.json', items.filter(p => p.id !== req.params.id));
-  res.json({ success: true });
+app.delete('/api/portfolio/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM portfolio WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Leads ─────────────────────────────────────────────────────────────────────
-app.get('/api/leads', requireAuth, (req, res) => {
-  res.json(readData('leads.json'));
+app.get('/api/leads', requireAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`SELECT * FROM leads ORDER BY created_at DESC`);
+    res.json(rows.map(r => ({ ...r, date: r.created_at })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/contact', (req, res) => {
-  const leads = readData('leads.json');
-  const lead = {
-    ...req.body,
-    id: Date.now().toString(),
-    date: new Date().toISOString(),
-    status: 'new'
-  };
-  leads.unshift(lead);
-  writeData('leads.json', leads);
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name='', email='', company='', project='', budget='', message='' } = req.body;
+    const id = Date.now().toString();
+    await pool.query(`
+      INSERT INTO leads (id, name, email, company, project, budget, message)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+    `, [id, name, email, company, project, budget, message]);
 
-  // bump monthly lead count
-  const analytics = readData('analytics.json');
-  analytics.totalLeads = leads.length;
-  const monthKey = new Date().toISOString().slice(0, 7);
-  const entry = (analytics.monthlyLeads || []).find(m => m.month === monthKey);
-  if (entry) {
-    entry.count++;
-  } else {
-    analytics.monthlyLeads = [...(analytics.monthlyLeads || []), { month: monthKey, count: 1 }];
-  }
-  writeData('analytics.json', analytics);
+    // bump monthly lead count
+    const monthKey = new Date().toISOString().slice(0, 7);
+    await pool.query(`
+      INSERT INTO monthly_leads (month, count) VALUES ($1, 1)
+      ON CONFLICT (month) DO UPDATE SET count = monthly_leads.count + 1
+    `, [monthKey]);
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.put('/api/leads/:id', requireAuth, (req, res) => {
-  const leads = readData('leads.json');
-  const idx = leads.findIndex(l => l.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  leads[idx] = { ...leads[idx], ...req.body };
-  writeData('leads.json', leads);
-  res.json(leads[idx]);
+app.put('/api/leads/:id', requireAuth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { rows } = await pool.query(
+      `UPDATE leads SET status = $2 WHERE id = $1 RETURNING *`,
+      [req.params.id, status]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ ...rows[0], date: rows[0].created_at });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/leads/:id', requireAuth, (req, res) => {
-  const leads = readData('leads.json');
-  writeData('leads.json', leads.filter(l => l.id !== req.params.id));
-  res.json({ success: true });
+app.delete('/api/leads/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM leads WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
-app.post('/api/analytics/pageview', (req, res) => {
-  const analytics = readData('analytics.json');
-  analytics.pageViews = (analytics.pageViews || 0) + 1;
-  const today = new Date().toISOString().slice(0, 10);
-  analytics.dailyViews = analytics.dailyViews || [];
-  const day = analytics.dailyViews.find(d => d.date === today);
-  if (day) {
-    day.count++;
-  } else {
-    analytics.dailyViews.push({ date: today, count: 1 });
-    if (analytics.dailyViews.length > 30) analytics.dailyViews.shift();
-  }
-  writeData('analytics.json', analytics);
-  res.json({ success: true });
+app.post('/api/analytics/pageview', async (req, res) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    await pool.query(`
+      INSERT INTO page_views (date, count) VALUES ($1, 1)
+      ON CONFLICT (date) DO UPDATE SET count = page_views.count + 1
+    `, [today]);
+    res.json({ success: true });
+  } catch (e) { res.json({ success: false }); }
 });
 
-app.get('/api/analytics', requireAuth, (req, res) => {
-  const analytics = readData('analytics.json');
-  const leads = readData('leads.json');
-  const portfolio = readData('portfolio.json');
-  res.json({
-    ...analytics,
-    totalLeads: leads.length,
-    newLeads: leads.filter(l => l.status === 'new').length,
-    portfolioItems: portfolio.length
-  });
+app.get('/api/analytics', requireAuth, async (req, res) => {
+  try {
+    const [views, monthly, leads, portfolio] = await Promise.all([
+      pool.query(`SELECT SUM(count) AS total, json_agg(json_build_object('date', date, 'count', count) ORDER BY date DESC) AS daily FROM page_views WHERE date >= CURRENT_DATE - 29`),
+      pool.query(`SELECT * FROM monthly_leads ORDER BY month DESC LIMIT 12`),
+      pool.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE status='new') AS new_count FROM leads`),
+      pool.query(`SELECT COUNT(*) AS total FROM portfolio`)
+    ]);
+    res.json({
+      pageViews: parseInt(views.rows[0]?.total || 0),
+      dailyViews: (views.rows[0]?.daily || []).reverse(),
+      monthlyLeads: monthly.rows.map(r => ({ month: r.month, count: r.count })),
+      totalLeads: parseInt(leads.rows[0]?.total || 0),
+      newLeads: parseInt(leads.rows[0]?.new_count || 0),
+      portfolioItems: parseInt(portfolio.rows[0]?.total || 0)
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Fallback ──────────────────────────────────────────────────────────────────
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
-app.listen(PORT, () => {
-  console.log(`\n  ✦  Studio Prototype running`);
-  console.log(`  →  Site:  http://localhost:${PORT}`);
-  console.log(`  →  Admin: http://localhost:${PORT}/admin.html`);
-  console.log(`  →  Pass:  ${ADMIN_PASSWORD}\n`);
+// ── Start ─────────────────────────────────────────────────────────────────────
+init().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n  ✦  Studio running on port ${PORT}`);
+    console.log(`  →  Site:  http://localhost:${PORT}`);
+    console.log(`  →  Admin: http://localhost:${PORT}/admin.html`);
+    console.log(`  →  Pass:  ${ADMIN_PASSWORD}\n`);
+  });
+}).catch(err => {
+  console.error('Database init failed:', err.message);
+  // Still start server even without DB (local dev fallback)
+  app.listen(PORT, () => console.log(`  ✦  Studio running (no DB) on port ${PORT}`));
 });
