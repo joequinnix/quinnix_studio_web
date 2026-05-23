@@ -217,8 +217,9 @@
     /* ── Image upload zone ────────────────────────────────────────────────── */
     .upload-zone {
       border: 2px dashed var(--border); border-radius: 10px;
-      padding: 32px 20px; text-align: center; cursor: pointer;
+      aspect-ratio: 1191 / 842; text-align: center; cursor: pointer;
       transition: border-color 0.2s, background 0.2s; position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(212,197,176,0.04); }
     .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
@@ -233,11 +234,11 @@
     /* ── Image gallery ────────────────────────────────────────────────────── */
     .img-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; min-height: 0; }
     .img-thumb {
-      position: relative; width: 112px; aspect-ratio: 1191 / 842; border-radius: 6px; overflow: hidden;
+      position: relative; width: 150px; aspect-ratio: 1191 / 842; border-radius: 6px; overflow: hidden;
       border: 2px solid transparent; cursor: grab; transition: border-color 0.15s, opacity 0.15s, transform 0.15s; flex-shrink: 0;
     }
     .img-thumb:active { cursor: grabbing; }
-    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+    .img-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
     .img-thumb.is-cover { border-color: var(--accent); }
     .img-thumb.img-dragging { opacity: 0.35; transform: scale(0.95); }
     .img-thumb.img-drag-over { border-color: var(--text); box-shadow: 0 0 0 2px var(--text); }
