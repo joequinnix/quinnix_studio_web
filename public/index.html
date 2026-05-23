@@ -391,34 +391,35 @@
     #lightbox {
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(0,0,0,0.96);
-      flex-direction: column; align-items: center; justify-content: center;
+      flex-direction: column; align-items: stretch; justify-content: flex-start;
     }
     #lightbox.open { display: flex; }
     #lightbox-track {
-      display: flex; width: 100%; height: 100%;
+      display: flex; width: 100%; flex: 1; min-height: 0;
       transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
       will-change: transform;
     }
     .lb-slide {
       min-width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding: 72px 80px;
+      padding: 60px 80px 0;
     }
     .lb-img-frame {
-      aspect-ratio: 1191 / 842;
-      max-width: min(100%, calc((100vh - 144px) * 1191 / 842));
-      max-height: calc(100vh - 144px);
-      width: 100%;
+      max-width: calc(100vw - 160px);
+      max-height: 100%;
       position: relative;
       border-radius: 4px;
-      overflow: hidden;
       flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
     }
     .lb-slide img {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: contain; display: block; background: #0a0a0a;
+      display: block;
+      max-width: 100%;
+      max-height: calc(100vh - 220px);
+      width: auto; height: auto;
+      border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
+      object-fit: contain;
     }
     #lightbox-close {
       position: fixed; top: 24px; right: 28px;
@@ -441,9 +442,10 @@
     #lightbox-prev:hover, #lightbox-next:hover { background: rgba(255,255,255,0.18); }
     #lightbox-prev.hidden, #lightbox-next.hidden { opacity: 0; pointer-events: none; }
     #lightbox-counter {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; align-items: center; justify-content: center;
       font-size: 12px; letter-spacing: 0.12em; color: rgba(255,255,255,0.45);
-      display: flex; gap: 8px; align-items: center;
+      padding: 10px 0 0;
+      flex-shrink: 0;
     }
     .lb-dot {
       width: 6px; height: 6px; border-radius: 50%;
@@ -451,8 +453,9 @@
     }
     .lb-dot.active { background: #fff; }
     #lightbox-info {
-      position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);
       text-align: center; pointer-events: none;
+      padding: 14px 40px 24px;
+      flex-shrink: 0;
     }
     #lightbox-title {
       font-family: 'Space Grotesk', sans-serif; font-size: 15px;
