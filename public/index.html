@@ -391,63 +391,49 @@
     #lightbox {
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(0,0,0,0.96);
+      /* flex centers the image; caption sits outside the flex area */
     }
-    #lightbox.open { display: block; }
+    #lightbox.open { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-    /* Sliding track: absolutely anchored top→above caption */
-    #lightbox-track {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 110px;
-      display: flex;
-      transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
-      will-change: transform;
-    }
-    .lb-slide {
-      min-width: 100vw; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      padding: 52px 60px;
-      box-sizing: border-box;
-    }
-    /* Frame is a transparent passthrough — no fixed ratio, no overflow */
-    .lb-img-frame { flex-shrink: 0; }
-    /*
-      Image constrains itself to the available space.
-      Track height = 100vh - 110px (caption bar).
-      Available: width = 100vw-120px, height = 100vh-110px-104px(padding) = 100vh-214px.
-      Browser picks the binding dimension and scales naturally — full image, no crop.
-    */
-    .lb-slide img {
+    /* The single image — constrained purely by viewport, nothing clips it */
+    #lb-main-img {
       display: block;
       max-width: calc(100vw - 120px);
-      max-height: calc(100vh - 220px);
+      max-height: calc(100vh - 130px); /* 130px = caption area (title+tags+dots ~70px) + 60px top margin */
       width: auto; height: auto;
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
+      transition: opacity 0.25s ease;
+      flex-shrink: 0;
     }
+    #lb-main-img.fading { opacity: 0; }
 
-    /* Caption bar pinned at bottom */
+    /* Caption below the image */
     #lightbox-info {
-      position: absolute; bottom: 52px; left: 0; right: 0;
       text-align: center; pointer-events: none;
+      padding: 14px 40px 0;
+      flex-shrink: 0;
     }
     #lightbox-counter {
-      position: absolute; bottom: 20px; left: 0; right: 0;
       display: flex; gap: 8px; align-items: center; justify-content: center;
+      padding: 10px 0 0;
+      flex-shrink: 0;
     }
     #lightbox-close {
-      position: absolute; top: 20px; right: 24px;
+      position: fixed; top: 20px; right: 24px;
       background: none; border: none; color: rgba(255,255,255,0.7);
-      font-size: 26px; cursor: pointer; z-index: 10000;
+      font-size: 26px; cursor: pointer; z-index: 10001;
       width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
       transition: color 0.2s; line-height: 1;
     }
     #lightbox-close:hover { color: #fff; }
     #lightbox-prev, #lightbox-next {
-      position: absolute; top: calc(50% - 55px); transform: translateY(-50%);
+      position: fixed; top: 50%; transform: translateY(-50%);
       background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
       color: #fff; font-size: 20px; cursor: pointer;
       width: 48px; height: 48px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s; z-index: 10000;
+      transition: background 0.2s; z-index: 10001;
     }
     #lightbox-prev { left: 16px; }
     #lightbox-next { right: 16px; }
@@ -1651,7 +1637,7 @@
   <div id="lightbox" role="dialog" aria-modal="true">
     <button id="lightbox-close" aria-label="Close">✕</button>
     <button id="lightbox-prev" aria-label="Previous">‹</button>
-    <div id="lightbox-track"></div>
+    <img id="lb-main-img" src="" alt="" draggable="false">
     <button id="lightbox-next" aria-label="Next">›</button>
     <div id="lightbox-info">
       <div id="lightbox-title"></div>
@@ -1662,14 +1648,14 @@
 
   <script>
   (function() {
-    const lb = document.getElementById('lightbox');
-    const track = document.getElementById('lightbox-track');
+    const lb       = document.getElementById('lightbox');
+    const mainImg  = document.getElementById('lb-main-img');
     const btnClose = document.getElementById('lightbox-close');
-    const btnPrev = document.getElementById('lightbox-prev');
-    const btnNext = document.getElementById('lightbox-next');
-    const counter = document.getElementById('lightbox-counter');
-    const lbTitle = document.getElementById('lightbox-title');
-    const lbTags = document.getElementById('lightbox-tags');
+    const btnPrev  = document.getElementById('lightbox-prev');
+    const btnNext  = document.getElementById('lightbox-next');
+    const counter  = document.getElementById('lightbox-counter');
+    const lbTitle  = document.getElementById('lightbox-title');
+    const lbTags   = document.getElementById('lightbox-tags');
 
     let images = [], cur = 0;
 
@@ -1680,8 +1666,8 @@
       cur = startIdx || 0;
       lbTitle.textContent = project.title;
       lbTags.textContent = (project.tags || [project.category || '']).join(' · ').toUpperCase();
-      buildSlides();
-      goTo(cur, false);
+      buildDots();
+      showImg(cur, false);
       lb.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -1692,11 +1678,7 @@
       images = []; cur = 0;
     }
 
-    function buildSlides() {
-      track.innerHTML = images.map((src, i) =>
-        `<div class="lb-slide"><div class="lb-img-frame"><img src="${src}" alt="Image ${i+1}" draggable="false"></div></div>`
-      ).join('');
-      // dots
+    function buildDots() {
       counter.innerHTML = images.map((_, i) =>
         `<div class="lb-dot${i === 0 ? ' active' : ''}" data-i="${i}"></div>`
       ).join('');
@@ -1705,13 +1687,24 @@
       );
     }
 
-    function goTo(idx, animate) {
+    function showImg(idx, fade) {
+      if (fade === false) {
+        mainImg.src = images[idx];
+      } else {
+        mainImg.classList.add('fading');
+        setTimeout(() => {
+          mainImg.src = images[idx];
+          mainImg.classList.remove('fading');
+        }, 200);
+      }
+      counter.querySelectorAll('.lb-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+      btnPrev.classList.toggle('hidden', idx === 0);
+      btnNext.classList.toggle('hidden', idx === images.length - 1);
+    }
+
+    function goTo(idx) {
       cur = Math.max(0, Math.min(idx, images.length - 1));
-      track.style.transition = animate === false ? 'none' : 'transform 0.38s cubic-bezier(0.16,1,0.3,1)';
-      track.style.transform = `translateX(-${cur * 100}%)`;
-      counter.querySelectorAll('.lb-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
-      btnPrev.classList.toggle('hidden', cur === 0);
-      btnNext.classList.toggle('hidden', cur === images.length - 1);
+      showImg(cur, true);
     }
 
     btnClose.addEventListener('click', close);
@@ -1719,7 +1712,6 @@
     btnNext.addEventListener('click', () => goTo(cur + 1));
     lb.addEventListener('click', e => { if (e.target === lb) close(); });
 
-    // Keyboard
     document.addEventListener('keydown', e => {
       if (!lb.classList.contains('open')) return;
       if (e.key === 'Escape') close();
@@ -1727,7 +1719,6 @@
       if (e.key === 'ArrowRight') goTo(cur + 1);
     });
 
-    // Touch swipe
     let touchX = null;
     lb.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
     lb.addEventListener('touchend', e => {
@@ -1737,7 +1728,6 @@
       touchX = null;
     });
 
-    // Expose opener for renderPortfolio
     window._openLightbox = open;
   })();
   </script>
