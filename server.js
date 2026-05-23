@@ -4,6 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 const { pool, init } = require('./db');
+const sharp = require('sharp');
 
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -76,9 +77,31 @@ app.put('/api/content', requireAuth, async (req, res) => {
 });
 
 // ── Image Upload ──────────────────────────────────────────────────────────────
-app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
+const CARD_W = 1191, CARD_H = 842;
+
+app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  res.json({ url: `/uploads/${req.file.filename}` });
+  try {
+    const filePath = req.file.path;
+    const ext = path.extname(req.file.filename).toLowerCase();
+    const outName = req.file.filename.replace(ext, '.jpg');
+    const outPath = path.join(uploadsDir, outName);
+
+    await sharp(filePath)
+      .resize(CARD_W, CARD_H, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toFile(outPath);
+
+    // Remove original if different filename
+    if (outName !== req.file.filename) {
+      try { fs.unlinkSync(filePath); } catch {}
+    }
+
+    res.json({ url: `/uploads/${outName}` });
+  } catch (e) {
+    // Fallback: serve original if sharp fails
+    res.json({ url: `/uploads/${req.file.filename}` });
+  }
 });
 
 app.delete('/api/upload', requireAuth, (req, res) => {
