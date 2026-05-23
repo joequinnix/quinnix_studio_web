@@ -386,6 +386,73 @@
       align-self: flex-start;
     }
     .card:hover .card-arrow { opacity: 1; transform: translate(0,0); }
+
+    /* ── Lightbox ──────────────────────────────────────────────────────── */
+    #lightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.96);
+      flex-direction: column; align-items: center; justify-content: center;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox-track {
+      display: flex; width: 100%; height: 100%;
+      transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
+      will-change: transform;
+    }
+    .lb-slide {
+      min-width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 72px 80px;
+    }
+    .lb-slide img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain; display: block;
+      border-radius: 4px;
+      user-select: none; -webkit-user-drag: none;
+    }
+    #lightbox-close {
+      position: fixed; top: 24px; right: 28px;
+      background: none; border: none; color: rgba(255,255,255,0.7);
+      font-size: 28px; cursor: pointer; z-index: 10000;
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s; line-height: 1;
+    }
+    #lightbox-close:hover { color: #fff; }
+    #lightbox-prev, #lightbox-next {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; font-size: 20px; cursor: pointer;
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 10000;
+    }
+    #lightbox-prev { left: 20px; }
+    #lightbox-next { right: 20px; }
+    #lightbox-prev:hover, #lightbox-next:hover { background: rgba(255,255,255,0.18); }
+    #lightbox-prev.hidden, #lightbox-next.hidden { opacity: 0; pointer-events: none; }
+    #lightbox-counter {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      font-size: 12px; letter-spacing: 0.12em; color: rgba(255,255,255,0.45);
+      display: flex; gap: 8px; align-items: center;
+    }
+    .lb-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); transition: background 0.2s; cursor: pointer;
+    }
+    .lb-dot.active { background: #fff; }
+    #lightbox-info {
+      position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);
+      text-align: center; pointer-events: none;
+    }
+    #lightbox-title {
+      font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+      font-weight: 600; color: rgba(255,255,255,0.85); letter-spacing: 0.02em;
+    }
+    #lightbox-tags {
+      font-size: 11px; color: rgba(255,255,255,0.38);
+      letter-spacing: 0.1em; margin-top: 4px;
+    }
+
     .card-meta {
       padding: 20px 0 4px;
       display: flex;
@@ -1075,7 +1142,7 @@
         }
 
         return `
-        <a class="card reveal${i > 0 ? ' reveal-delay-' + i : ''}" href="${href}"${target} data-pid="${p.id}">
+        <a class="card reveal${i > 0 ? ' reveal-delay-' + i : ''}" href="${href}"${target} data-pid="${p.id}" data-idx="${i}">
           <div class="card-image">
             ${cardBg}
             ${dotsHtml}
@@ -1121,6 +1188,18 @@
 
         card.addEventListener('mouseenter', startCycle);
         card.addEventListener('mouseleave', stopCycle);
+      });
+
+      // Lightbox: intercept card clicks
+      grid.querySelectorAll('.card[data-pid]').forEach(card => {
+        card.addEventListener('click', e => {
+          const p = items.find(x => x.id === card.dataset.pid);
+          if (!p) return;
+          const hasImages = (p.images && p.images.length) || p.coverImage;
+          if (!hasImages) return; // fall through to URL if no images
+          e.preventDefault();
+          window._openLightbox && window._openLightbox(p, 0);
+        });
       });
 
       observeReveal();
@@ -1551,6 +1630,101 @@
       orb.position.y = Math.sin(t * 0.5) * 0.1;
       renderer.render(scene, camera);
     })();
+  })();
+  </script>
+
+  <!-- ── Lightbox ────────────────────────────────────────────────────────── -->
+  <div id="lightbox" role="dialog" aria-modal="true">
+    <button id="lightbox-close" aria-label="Close">✕</button>
+    <button id="lightbox-prev" aria-label="Previous">‹</button>
+    <div id="lightbox-track"></div>
+    <button id="lightbox-next" aria-label="Next">›</button>
+    <div id="lightbox-info">
+      <div id="lightbox-title"></div>
+      <div id="lightbox-tags"></div>
+    </div>
+    <div id="lightbox-counter"></div>
+  </div>
+
+  <script>
+  (function() {
+    const lb = document.getElementById('lightbox');
+    const track = document.getElementById('lightbox-track');
+    const btnClose = document.getElementById('lightbox-close');
+    const btnPrev = document.getElementById('lightbox-prev');
+    const btnNext = document.getElementById('lightbox-next');
+    const counter = document.getElementById('lightbox-counter');
+    const lbTitle = document.getElementById('lightbox-title');
+    const lbTags = document.getElementById('lightbox-tags');
+
+    let images = [], cur = 0;
+
+    function open(project, startIdx) {
+      images = project.images && project.images.length ? project.images
+               : project.coverImage ? [project.coverImage] : [];
+      if (!images.length) return;
+      cur = startIdx || 0;
+      lbTitle.textContent = project.title;
+      lbTags.textContent = (project.tags || [project.category || '']).join(' · ').toUpperCase();
+      buildSlides();
+      goTo(cur, false);
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+      lb.classList.remove('open');
+      document.body.style.overflow = '';
+      images = []; cur = 0;
+    }
+
+    function buildSlides() {
+      track.innerHTML = images.map((src, i) =>
+        `<div class="lb-slide"><img src="${src}" alt="Image ${i+1}" draggable="false"></div>`
+      ).join('');
+      // dots
+      counter.innerHTML = images.map((_, i) =>
+        `<div class="lb-dot${i === 0 ? ' active' : ''}" data-i="${i}"></div>`
+      ).join('');
+      counter.querySelectorAll('.lb-dot').forEach(d =>
+        d.addEventListener('click', () => goTo(parseInt(d.dataset.i)))
+      );
+    }
+
+    function goTo(idx, animate) {
+      cur = Math.max(0, Math.min(idx, images.length - 1));
+      track.style.transition = animate === false ? 'none' : 'transform 0.38s cubic-bezier(0.16,1,0.3,1)';
+      track.style.transform = `translateX(-${cur * 100}%)`;
+      counter.querySelectorAll('.lb-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+      btnPrev.classList.toggle('hidden', cur === 0);
+      btnNext.classList.toggle('hidden', cur === images.length - 1);
+    }
+
+    btnClose.addEventListener('click', close);
+    btnPrev.addEventListener('click', () => goTo(cur - 1));
+    btnNext.addEventListener('click', () => goTo(cur + 1));
+    lb.addEventListener('click', e => { if (e.target === lb) close(); });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowLeft') goTo(cur - 1);
+      if (e.key === 'ArrowRight') goTo(cur + 1);
+    });
+
+    // Touch swipe
+    let touchX = null;
+    lb.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 50) goTo(dx < 0 ? cur + 1 : cur - 1);
+      touchX = null;
+    });
+
+    // Expose opener for renderPortfolio
+    window._openLightbox = open;
   })();
   </script>
 </body>
