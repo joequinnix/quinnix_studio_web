@@ -234,14 +234,17 @@
     .img-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; min-height: 0; }
     .img-thumb {
       position: relative; width: 112px; height: 63px; border-radius: 6px; overflow: hidden;
-      border: 2px solid transparent; cursor: pointer; transition: border-color 0.15s; flex-shrink: 0;
+      border: 2px solid transparent; cursor: grab; transition: border-color 0.15s, opacity 0.15s, transform 0.15s; flex-shrink: 0;
     }
-    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .img-thumb:active { cursor: grabbing; }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
     .img-thumb.is-cover { border-color: var(--accent); }
+    .img-thumb.img-dragging { opacity: 0.35; transform: scale(0.95); }
+    .img-thumb.img-drag-over { border-color: var(--text); box-shadow: 0 0 0 2px var(--text); }
     .img-thumb-cover-badge {
       position: absolute; bottom: 4px; left: 4px; background: var(--accent); color: var(--bg);
       font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 5px; border-radius: 3px;
-      text-transform: uppercase;
+      text-transform: uppercase; pointer-events: none;
     }
     .img-thumb-remove {
       position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.65);
@@ -250,6 +253,7 @@
       opacity: 0; transition: opacity 0.15s; line-height: 1;
     }
     .img-thumb:hover .img-thumb-remove { opacity: 1; }
+    .img-drag-hint { font-size: 11px; color: var(--text3); margin-top: 6px; }
     .img-gallery-hint { font-size: 11px; color: var(--text3); margin-top: 6px; }
 
     /* ── Modal wider ─────────────────────────────────────────────────────── */
@@ -571,7 +575,7 @@
             <span id="uploadProgressText">Uploading…</span>
           </div>
           <div class="img-gallery" id="imgGallery"></div>
-          <div class="img-gallery-hint" id="imgGalleryHint" style="display:none">Click an image to set as cover · Hover to remove</div>
+          <div class="img-gallery-hint" id="imgGalleryHint" style="display:none">Drag to reorder · Click to set as cover · Hover to remove</div>
         </div>
 
         <!-- Details -->
@@ -950,17 +954,63 @@
       renderImgGallery();
     }
 
+    let imgDragSrc = null;
+
     function renderImgGallery() {
       const gallery = document.getElementById('imgGallery');
       const hint = document.getElementById('imgGalleryHint');
       hint.style.display = modalImages.length ? '' : 'none';
       gallery.innerHTML = modalImages.map((img, i) => `
-        <div class="img-thumb ${img.isCover ? 'is-cover' : ''}" onclick="setCover(${i})" title="Click to set as cover">
+        <div class="img-thumb ${img.isCover ? 'is-cover' : ''}"
+          draggable="true"
+          data-img-idx="${i}"
+          title="Drag to reorder · Click to set as cover"
+        >
           <img src="${img.url}" alt="">
           ${img.isCover ? '<span class="img-thumb-cover-badge">Cover</span>' : ''}
-          <button class="img-thumb-remove" onclick="removeImg(event,${i})">✕</button>
+          <button class="img-thumb-remove" data-remove-idx="${i}">✕</button>
         </div>
       `).join('');
+
+      // Attach events after render
+      gallery.querySelectorAll('.img-thumb').forEach(el => {
+        const i = parseInt(el.dataset.imgIdx);
+
+        // Click to set cover (only if not dragging)
+        el.addEventListener('click', () => { if (!imgDragSrc) setCover(i); });
+
+        // Remove button
+        el.querySelector('.img-thumb-remove').addEventListener('click', e => removeImg(e, i));
+
+        // Drag to reorder
+        el.addEventListener('dragstart', e => {
+          imgDragSrc = i;
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => el.classList.add('img-dragging'), 0);
+        });
+        el.addEventListener('dragend', () => {
+          imgDragSrc = null;
+          gallery.querySelectorAll('.img-thumb').forEach(t => {
+            t.classList.remove('img-dragging', 'img-drag-over');
+          });
+        });
+        el.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (imgDragSrc !== null && imgDragSrc !== i) el.classList.add('img-drag-over');
+        });
+        el.addEventListener('dragleave', () => el.classList.remove('img-drag-over'));
+        el.addEventListener('drop', e => {
+          e.preventDefault();
+          el.classList.remove('img-drag-over');
+          if (imgDragSrc === null || imgDragSrc === i) return;
+          // Reorder array
+          const moved = modalImages.splice(imgDragSrc, 1)[0];
+          modalImages.splice(i, 0, moved);
+          imgDragSrc = null;
+          renderImgGallery();
+        });
+      });
     }
 
     function setCover(idx) {
