@@ -393,58 +393,72 @@
       background: rgba(0,0,0,0.96);
     }
     #lightbox.open { display: block; }
-    /* Track is absolutely positioned — top to above the caption bar */
+
+    /* Sliding track: absolutely anchored top→above caption */
     #lightbox-track {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 108px;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 110px;
       display: flex;
       transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
       will-change: transform;
     }
     .lb-slide {
-      min-width: 100vw;
-      height: 100%;
+      min-width: 100vw; height: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding: 60px 72px;
+      padding: 52px 72px;
       box-sizing: border-box;
     }
-    .lb-img-frame { /* transparent passthrough */ }
-    /* Image sizes itself to its natural ratio, capped to available space */
+
+    /*
+      Frame is 1191:842. Size via min() so it never overflows viewport:
+        width  = min(available_w, available_h × 1191/842)
+        available_w = 100vw - 144px  (72px each side)
+        available_h = 100vh - 214px  (110px caption + 52px top + 52px bottom)
+    */
+    .lb-img-frame {
+      aspect-ratio: 1191 / 842;
+      width: min(calc(100vw - 144px), calc((100vh - 214px) * 1191 / 842));
+      flex-shrink: 0;
+      position: relative;
+      border-radius: 4px;
+      background: #0a0a0a;
+    }
+    /* Image fills frame fully; object-fit:contain = no crop, letterbox where ratio differs */
     .lb-slide img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
       display: block;
-      max-width: calc(100vw - 144px);
-      max-height: calc(100vh - 228px); /* 60px top + 108px caption + 60px bottom pad */
-      width: auto; height: auto;
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
     }
-    /* Caption bar — absolute at bottom of lightbox */
+
+    /* Caption bar pinned at bottom */
     #lightbox-info {
-      position: absolute; bottom: 50px; left: 0; right: 0;
+      position: absolute; bottom: 52px; left: 0; right: 0;
       text-align: center; pointer-events: none;
     }
     #lightbox-counter {
-      position: absolute; bottom: 18px; left: 0; right: 0;
+      position: absolute; bottom: 20px; left: 0; right: 0;
       display: flex; gap: 8px; align-items: center; justify-content: center;
     }
     #lightbox-close {
-      position: absolute; top: 24px; right: 28px;
+      position: absolute; top: 20px; right: 24px;
       background: none; border: none; color: rgba(255,255,255,0.7);
-      font-size: 28px; cursor: pointer; z-index: 10000;
+      font-size: 26px; cursor: pointer; z-index: 10000;
       width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
       transition: color 0.2s; line-height: 1;
     }
     #lightbox-close:hover { color: #fff; }
     #lightbox-prev, #lightbox-next {
-      position: absolute; top: calc(50% - 54px); transform: translateY(-50%);
+      position: absolute; top: calc(50% - 55px); transform: translateY(-50%);
       background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
       color: #fff; font-size: 20px; cursor: pointer;
       width: 48px; height: 48px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.2s; z-index: 10000;
     }
-    #lightbox-prev { left: 20px; }
-    #lightbox-next { right: 20px; }
+    #lightbox-prev { left: 16px; }
+    #lightbox-next { right: 16px; }
     #lightbox-prev:hover, #lightbox-next:hover { background: rgba(255,255,255,0.18); }
     #lightbox-prev.hidden, #lightbox-next.hidden { opacity: 0; pointer-events: none; }
     .lb-dot {
