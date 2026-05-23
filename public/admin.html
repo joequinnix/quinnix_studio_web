@@ -194,7 +194,7 @@
     .portfolio-card:hover { border-color: var(--border2); }
     .portfolio-card.drag-over { border-color: var(--accent); border-style: dashed; }
     .portfolio-card.dragging { opacity: 0.4; }
-    .portfolio-card-thumb { aspect-ratio: 842 / 595; position: relative; overflow: hidden; }
+    .portfolio-card-thumb { aspect-ratio: 1191 / 842; position: relative; overflow: hidden; }
     .portfolio-card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
     .drag-handle {
       position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.5);
@@ -233,7 +233,7 @@
     /* ── Image gallery ────────────────────────────────────────────────────── */
     .img-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; min-height: 0; }
     .img-thumb {
-      position: relative; width: 112px; aspect-ratio: 842 / 595; border-radius: 6px; overflow: hidden;
+      position: relative; width: 112px; aspect-ratio: 1191 / 842; border-radius: 6px; overflow: hidden;
       border: 2px solid transparent; cursor: grab; transition: border-color 0.15s, opacity 0.15s, transform 0.15s; flex-shrink: 0;
     }
     .img-thumb:active { cursor: grabbing; }
@@ -568,7 +568,7 @@
             <input type="file" id="imgFileInput" accept="image/*" multiple>
             <div class="upload-zone-icon">📁</div>
             <div class="upload-zone-label">Click to browse or drag &amp; drop images</div>
-            <div class="upload-zone-sub">JPG · PNG · WebP · Displayed at 842 × 595 landscape</div>
+            <div class="upload-zone-sub">JPG · PNG · WebP · Displayed at 1191 × 842 landscape</div>
           </div>
           <div class="upload-progress" id="uploadProgress">
             <div class="upload-spinner"></div>
