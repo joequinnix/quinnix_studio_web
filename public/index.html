@@ -404,30 +404,22 @@
     .lb-slide {
       min-width: 100vw; height: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding: 52px 72px;
+      padding: 52px 60px;
       box-sizing: border-box;
     }
-
+    /* Frame is a transparent passthrough — no fixed ratio, no overflow */
+    .lb-img-frame { flex-shrink: 0; }
     /*
-      Frame is 1191:842. Size via min() so it never overflows viewport:
-        width  = min(available_w, available_h × 1191/842)
-        available_w = 100vw - 144px  (72px each side)
-        available_h = 100vh - 214px  (110px caption + 52px top + 52px bottom)
+      Image constrains itself to the available space.
+      Track height = 100vh - 110px (caption bar).
+      Available: width = 100vw-120px, height = 100vh-110px-104px(padding) = 100vh-214px.
+      Browser picks the binding dimension and scales naturally — full image, no crop.
     */
-    .lb-img-frame {
-      aspect-ratio: 1191 / 842;
-      width: min(calc(100vw - 144px), calc((100vh - 214px) * 1191 / 842));
-      flex-shrink: 0;
-      position: relative;
-      border-radius: 4px;
-      background: #0a0a0a;
-    }
-    /* Image fills frame fully; object-fit:contain = no crop, letterbox where ratio differs */
     .lb-slide img {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: contain;
       display: block;
+      max-width: calc(100vw - 120px);
+      max-height: calc(100vh - 220px);
+      width: auto; height: auto;
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
     }
