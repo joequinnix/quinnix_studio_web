@@ -208,9 +208,15 @@
       border-radius: var(--radius);
       text-decoration: none;
       letter-spacing: 0.02em;
-      transition: background 0.2s, transform 0.2s;
+      cursor: pointer;
+      transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     }
-    .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+    .btn-primary:hover {
+      background: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .btn-primary:hover span { transform: translateX(3px); display: inline-block; transition: transform 0.2s; }
     .btn-secondary {
       display: inline-flex;
       align-items: center;
@@ -220,11 +226,12 @@
       color: var(--text2);
       text-decoration: none;
       letter-spacing: 0.02em;
-      transition: color 0.2s;
+      cursor: pointer;
+      transition: color 0.25s ease, gap 0.25s ease;
       border-bottom: 1px solid var(--border2);
       padding-bottom: 2px;
     }
-    .btn-secondary:hover { color: var(--text); border-color: var(--text2); }
+    .btn-secondary:hover { color: var(--text); border-color: rgba(240,237,232,0.5); gap: 16px; }
     .scroll-indicator {
       position: absolute;
       bottom: 40px;
@@ -755,7 +762,7 @@
         document.addEventListener('click', function(){ v.muted = true; v.play(); }, { once: true });
       })();
     </script>
-    <div class="hero-bg" style="z-index:1;background:linear-gradient(to bottom, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.55) 40%, rgba(8,8,8,0.88) 100%);"></div>
+    <div class="hero-bg" style="z-index:1;pointer-events:none;background:linear-gradient(to bottom, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.55) 40%, rgba(8,8,8,0.88) 100%);"></div>
     <div class="container" style="position:relative;z-index:2;">
       <div class="hero-eyebrow">Creative Agency</div>
       <h1 class="hero-headline" id="heroHeadline">
