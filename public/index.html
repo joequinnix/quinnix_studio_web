@@ -336,11 +336,10 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+      background: #0a0a0a;
     }
-    .card:hover .card-image { transform: scale(1.02); }
-    .card-image-inner { position: absolute; inset: 0; transition: transform 0.6s cubic-bezier(0.16,1,0.3,1); }
-    .card:hover .card-image-inner { transform: scale(1.05); }
+    .card-image-inner { position: absolute; inset: 0; transition: opacity 0.4s ease; }
+    .card:hover .card-image-inner { opacity: 0.88; }
 
     /* ── Carousel ──────────────────────────────────────────────────────── */
     .carousel-slide {
