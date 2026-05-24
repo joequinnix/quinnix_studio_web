@@ -57,32 +57,17 @@
       top: 0; left: 0; right: 0;
       height: var(--nav-h);
       z-index: 100;
-      transition: background 0.4s ease, border-color 0.4s ease;
-      border-bottom: 1px solid transparent;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
     }
     nav.scrolled {
-      background: rgba(250,250,248,0.96);
-      backdrop-filter: blur(20px);
-      border-color: var(--border);
+      background: rgba(250,250,248,0.98);
+      box-shadow: 0 1px 0 var(--border);
     }
-
-    /* ── Nav text: white over dark hero video; dark once scrolled ─────── */
-    .nav-logo { color: rgba(255,255,255,0.95); }
-    .nav-links a { color: rgba(255,255,255,0.65); }
-    .nav-links a:hover { color: #fff; }
-    .btn-nav { color: rgba(255,255,255,0.95) !important; }
-    .btn-nav:hover { color: rgba(255,255,255,0.7) !important; }
-    .nav-toggle span { background: #fff; }
-
-    nav.scrolled .nav-logo { color: var(--text); }
-    nav.scrolled .nav-links a { color: var(--text2); }
-    nav.scrolled .nav-links a:hover { color: var(--text); }
-    nav.scrolled .btn-nav { color: var(--text) !important; }
-    nav.scrolled .btn-nav:hover { color: var(--accent) !important; }
-    nav.scrolled .nav-toggle span { background: var(--text); }
-
+    /* Nav is always dark on white/light page */
     @media (max-width: 768px) {
-      /* mobile menu drops below nav into page — needs dark text on light bg */
       .nav-links a { color: var(--text2) !important; }
       .nav-links a:hover { color: var(--text) !important; }
     }
@@ -162,7 +147,8 @@
     .hero-bg {
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,197,176,0.06) 0%, transparent 70%);
+      /* Warm white wash over video — keeps subtle texture, ensures light theme */
+      background: linear-gradient(160deg, rgba(250,250,248,0.93) 0%, rgba(242,240,236,0.90) 100%);
       pointer-events: none;
     }
     .hero-eyebrow {
@@ -170,20 +156,20 @@
       font-weight: 500;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.55); /* white over dark video */
+      color: var(--text3);
       margin-bottom: 32px;
       display: flex;
       align-items: center;
       gap: 16px;
     }
-    .hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: rgba(255,255,255,0.25); display: block; }
+    .hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--border2); display: block; }
     .hero-headline {
       font-family: 'Space Grotesk', sans-serif;
       font-size: clamp(48px, 7.5vw, 110px);
       font-weight: 600;
       line-height: 1.0;
       letter-spacing: -0.03em;
-      color: #fff; /* white over dark video */
+      color: var(--text);
       max-width: 14ch;
       margin-bottom: 48px;
     }
@@ -206,7 +192,7 @@
     }
     .hero-sub {
       font-size: 16px;
-      color: rgba(255,255,255,0.68); /* white over dark video */
+      color: var(--text2);
       max-width: 440px;
       line-height: 1.7;
     }
@@ -254,13 +240,7 @@
     }
     .btn-secondary:hover { color: var(--text); border-color: rgba(17,17,16,0.35); gap: 16px; }
 
-    /* Hero buttons — white-on-dark since hero overlays the video */
-    #hero .btn-primary { background: #fff; color: #111; }
-    #hero .btn-primary:hover { background: rgba(255,255,255,0.88); }
-    #hero .btn-secondary { color: rgba(255,255,255,0.65); border-color: rgba(255,255,255,0.2); }
-    #hero .btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.5); gap: 16px; }
-    #hero .scroll-indicator { color: #fff; }
-    #hero .scroll-line { background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.5)); }
+    /* Hero uses standard dark-on-light buttons (white theme) */
     .scroll-indicator {
       position: absolute;
       bottom: 40px;
@@ -342,19 +322,18 @@
       color: var(--text2);
       letter-spacing: 0.06em;
     }
-    /* ── Collage layout ────────────────────────────────────────────────── */
+    /* ── Portfolio grid ────────────────────────────────────────────────── */
     .portfolio-grid {
-      columns: 2;
-      column-gap: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      align-items: start;
     }
-    @media (min-width: 1280px) { .portfolio-grid { columns: 3; } }
-    @media (max-width: 768px)  { .portfolio-grid { columns: 1; } }
+    @media (min-width: 1280px) { .portfolio-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px)  { .portfolio-grid { grid-template-columns: 1fr; } }
 
     .card {
-      break-inside: avoid;
-      -webkit-column-break-inside: avoid;
       display: block;
-      margin-bottom: 12px;
       position: relative;
       border-radius: 8px;
       overflow: hidden;
@@ -362,13 +341,13 @@
       text-decoration: none;
     }
     .card-image {
-      /* NO forced aspect-ratio — height comes from content (natural image ratio) */
+      /* Fixed A3 landscape ratio — every card the same height */
+      aspect-ratio: 1191 / 842;
       position: relative;
       overflow: hidden;
-      background: #f0eee9; /* warm light grey — shows during load & behind gradient cards */
+      background: var(--bg2); /* warm cream — visible as letterbox on contain images */
       width: 100%;
     }
-    /* gradient-only cards get a fallback ratio via inline style */
     .card-image-inner { position: absolute; inset: 0; transition: opacity 0.4s ease; }
     .card:hover .card-image-inner { opacity: 0.88; }
 
@@ -383,7 +362,7 @@
     .carousel-slide img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: cover; display: block;
+      object-fit: contain; display: block;
     }
     .carousel-dots {
       position: absolute;
@@ -868,7 +847,7 @@
         document.addEventListener('click', function(){ v.muted = true; v.play(); }, { once: true });
       })();
     </script>
-    <div class="hero-bg" style="z-index:1;pointer-events:none;background:linear-gradient(to bottom, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.55) 40%, rgba(8,8,8,0.88) 100%);"></div>
+    <div class="hero-bg" style="z-index:1;"></div>
     <div class="container" style="position:relative;z-index:2;">
       <div class="hero-eyebrow">Creative Agency</div>
       <h1 class="hero-headline" id="heroHeadline">
@@ -958,7 +937,7 @@
           <p class="about-body reveal reveal-delay-1" id="aboutBody">Founded with a simple belief: great design is the best business advantage. We partner with ambitious brands at every stage — from early-stage startups finding their voice to established companies reinventing themselves.</p>
           <div class="about-stats reveal reveal-delay-2" id="aboutStats"></div>
         </div>
-        <div class="about-visual reveal reveal-delay-1" style="padding:0;background:transparent;border-color:rgba(240,237,232,0.07);">
+        <div class="about-visual reveal reveal-delay-1" style="padding:0;">
           <canvas id="orbCanvas" style="width:100%;height:100%;display:block;border-radius:12px;"></canvas>
         </div>
       </div>
@@ -1168,30 +1147,28 @@
         const target = p.url ? ' target="_blank" rel="noopener"' : '';
         const imgs = (p.images && p.images.length > 0) ? p.images : (p.coverImage ? [p.coverImage] : null);
 
-        let cardBg, dotsHtml = '', cardImageStyle = '';
+        let cardBg, dotsHtml = '';
         if (imgs && imgs.length > 1) {
-          // Hidden sizer: natural-sized first image establishes container height for abs slides
-          cardBg = `<img src="${imgs[0]}" aria-hidden="true" alt="" style="display:block;width:100%;height:auto;visibility:hidden;" loading="lazy">
-            ${imgs.map((src, si) =>
-              `<div class="carousel-slide${si === 0 ? ' active' : ''}" data-idx="${si}">
-                 <img src="${src}" alt="${p.title} ${si + 1}" loading="lazy">
-               </div>`
-            ).join('')}`;
+          // Card-image ratio is fixed via CSS — slides are all abs-positioned
+          cardBg = imgs.map((src, si) =>
+            `<div class="carousel-slide${si === 0 ? ' active' : ''}" data-idx="${si}">
+               <img src="${src}" alt="${p.title} ${si + 1}" loading="lazy">
+             </div>`
+          ).join('');
           dotsHtml = `<div class="carousel-dots">${imgs.map((_, si) =>
             `<div class="carousel-dot${si === 0 ? ' active' : ''}"></div>`
           ).join('')}</div>`;
         } else if (imgs && imgs.length === 1) {
-          // Single image: flows at its own natural ratio
-          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="display:block;width:100%;height:auto;" loading="lazy">`;
+          // Single image: fills fixed-ratio frame, contain = no cropping
+          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;" loading="lazy">`;
         } else {
-          // Gradient fallback: use A3 landscape ratio so gradient cards stay proportional
-          cardImageStyle = 'style="aspect-ratio:1191/842;"';
-          cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#1a1a1a'}"></div>`;
+          // Gradient fallback: card-image already has aspect-ratio:1191/842 via CSS
+          cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#e8e4dd'}"></div>`;
         }
 
         return `
         <a class="card reveal${i > 0 ? ' reveal-delay-' + i : ''}" href="${href}"${target} data-pid="${p.id}" data-idx="${i}">
-          <div class="card-image" ${cardImageStyle}>
+          <div class="card-image">
             ${cardBg}
             ${dotsHtml}
             <div class="card-overlay">
