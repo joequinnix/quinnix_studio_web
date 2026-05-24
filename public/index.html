@@ -322,19 +322,18 @@
       color: var(--text2);
       letter-spacing: 0.06em;
     }
-    /* ── Portfolio grid — 2-col masonry ───────────────────────────────── */
+    /* ── Portfolio grid ────────────────────────────────────────────────── */
     .portfolio-grid {
-      columns: 2;
-      column-gap: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      align-items: start;
     }
-    @media (min-width: 1280px) { .portfolio-grid { columns: 3; } }
-    @media (max-width: 768px)  { .portfolio-grid { columns: 1; } }
+    @media (min-width: 1280px) { .portfolio-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px)  { .portfolio-grid { grid-template-columns: 1fr; } }
 
     .card {
-      break-inside: avoid;
-      -webkit-column-break-inside: avoid;
       display: block;
-      margin-bottom: 12px;
       position: relative;
       border-radius: 12px;
       overflow: hidden;
@@ -342,26 +341,24 @@
       text-decoration: none;
     }
 
-    /* ── Card image frame ──────────────────────────────────────────────── */
-    /* Height is always set by content — never a fixed ratio.
-       Single images: height:auto → shows at its own natural dimensions.
-       Carousel:      invisible sizer img sets height from image 1's ratio;
-                      slides fill that height with object-fit:contain (no crop).
-       Gradient:      inline aspect-ratio keeps the card from collapsing. */
+    /* ── Card image: A3 landscape frame, full image, no bars ───────────── */
     .card-image {
+      aspect-ratio: 1191 / 842;     /* A3 landscape — matches recommended upload */
       position: relative;
       overflow: hidden;
-      background: var(--bg2);   /* warm cream — visible only if contain leaves space */
       width: 100%;
+      background: #ffffff;          /* white bg: contain areas blend with light images */
     }
 
-    /* Sizer image (carousel only) — takes up natural space, stays invisible */
-    .card-image .sizer {
-      display: block;
+    /* All images inside the frame — contain shows 100% of the image */
+    .card-image img {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      height: auto;
-      visibility: hidden;
-      pointer-events: none;
+      height: 100%;
+      object-fit: contain;          /* full image always visible, zero cropping */
+      object-position: center;
+      display: block;
     }
 
     .card-image-inner { position: absolute; inset: 0; transition: opacity 0.4s ease; }
@@ -376,10 +373,10 @@
     }
     .carousel-slide.active { opacity: 1; }
     .carousel-slide img {
-      /* contain = full image always visible; bg fills any extra space */
       position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: contain;
+      object-position: center;
       display: block;
     }
     .carousel-dots {
@@ -1165,32 +1162,28 @@
         const target = p.url ? ' target="_blank" rel="noopener"' : '';
         const imgs = (p.images && p.images.length > 0) ? p.images : (p.coverImage ? [p.coverImage] : null);
 
-        let cardBg, dotsHtml = '', cardImageStyle = '';
+        let cardBg, dotsHtml = '';
         if (imgs && imgs.length > 1) {
-          // Invisible sizer: first image at natural dimensions → sets container height.
-          // All carousel slides are abs-positioned inside that natural height.
-          cardBg = `<img class="sizer" src="${imgs[0]}" aria-hidden="true" alt="" loading="lazy">
-            ${imgs.map((src, si) =>
-              `<div class="carousel-slide${si === 0 ? ' active' : ''}" data-idx="${si}">
-                 <img src="${src}" alt="${p.title} ${si + 1}" loading="lazy">
-               </div>`
-            ).join('')}`;
+          // Multiple images: A3 frame fixed by CSS; each slide is abs + contain
+          cardBg = imgs.map((src, si) =>
+            `<div class="carousel-slide${si === 0 ? ' active' : ''}" data-idx="${si}">
+               <img src="${src}" alt="${p.title} ${si + 1}" loading="lazy">
+             </div>`
+          ).join('');
           dotsHtml = `<div class="carousel-dots">${imgs.map((_, si) =>
             `<div class="carousel-dot${si === 0 ? ' active' : ''}"></div>`
           ).join('')}</div>`;
         } else if (imgs && imgs.length === 1) {
-          // Single image: block + height:auto → shows at its own natural ratio
-          cardBg = `<img src="${imgs[0]}" alt="${p.title}"
-              style="display:block;width:100%;height:auto;" loading="lazy">`;
+          // Single image: A3 frame fixed by CSS; abs + contain shows full image
+          cardBg = `<img src="${imgs[0]}" alt="${p.title}" loading="lazy">`;
         } else {
-          // Gradient only: force a ratio so the card doesn't collapse to zero height
-          cardImageStyle = 'style="aspect-ratio:1.414/1;"';
+          // Gradient only: CSS handles the ratio, just fill the frame
           cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#e8e4dd'}"></div>`;
         }
 
         return `
         <a class="card reveal${i > 0 ? ' reveal-delay-' + i : ''}" href="${href}"${target} data-pid="${p.id}" data-idx="${i}">
-          <div class="card-image" ${cardImageStyle}>
+          <div class="card-image">
             ${cardBg}
             ${dotsHtml}
             <div class="card-overlay">
