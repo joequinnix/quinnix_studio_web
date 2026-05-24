@@ -351,7 +351,7 @@
     .carousel-slide img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: contain; background: #0a0a0a; display: block;
+      object-fit: cover; display: block;
     }
     .carousel-dots {
       position: absolute;
@@ -1149,7 +1149,7 @@
             `<div class="carousel-dot${si === 0 ? ' active' : ''}"></div>`
           ).join('')}</div>`;
         } else if (imgs && imgs.length === 1) {
-          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;display:block;">`;
+          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">`;
         } else {
           cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#1a1a1a'}"></div>`;
         }
