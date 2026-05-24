@@ -1,5 +1,5 @@
 {
-  "pageViews": 68,
+  "pageViews": 81,
   "totalLeads": 3,
   "dailyViews": [
     {
@@ -8,7 +8,11 @@
     },
     {
       "date": "2026-05-20",
-      "count": 44
+      "count": 55
+    },
+    {
+      "date": "2026-05-23",
+      "count": 2
     }
   ],
   "monthlyLeads": [
