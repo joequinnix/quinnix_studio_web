@@ -349,7 +349,7 @@
     .carousel-slide img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: cover; display: block;
+      object-fit: contain; background: #0a0a0a; display: block;
     }
     .carousel-dots {
       position: absolute;
@@ -393,37 +393,41 @@
       background: rgba(0,0,0,0.96);
     }
     #lightbox.open {
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-      padding: 72px 70px 20px;
-      overflow-y: auto;
-      box-sizing: border-box;
+      display: flex; flex-direction: column; align-items: center;
+      overflow: hidden; box-sizing: border-box;
     }
 
-    /* Image — never taller than what's left after top pad + bottom pad + caption */
+    /* Wrapper takes ALL remaining height after caption — image fits inside it */
+    #lb-img-frame {
+      flex: 1;
+      min-height: 0;           /* allow shrink below content size */
+      width: calc(100% - 140px); /* 70px each side for arrow buttons */
+      margin-top: 64px;        /* clear the fixed ✕ button */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
     #lb-main-img {
       display: block;
       max-width: 100%;
-      max-height: calc(100vh - 260px); /* 72 top + 20 bottom + 80 caption + 88 safety */
+      max-height: 100%;        /* constrained by flex:1 wrapper — never clips */
       width: auto; height: auto;
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
       transition: opacity 0.25s ease;
-      flex-shrink: 1;
-      min-height: 0;
-      margin-bottom: 0;
     }
     #lb-main-img.fading { opacity: 0; }
 
-    /* Caption below the image */
+    /* Caption */
     #lightbox-info {
       text-align: center; pointer-events: none;
-      padding: 14px 40px 0;
-      flex-shrink: 0;
+      padding: 12px 40px 0; flex-shrink: 0;
     }
     #lightbox-counter {
       display: flex; gap: 8px; align-items: center; justify-content: center;
-      padding: 10px 0 0;
-      flex-shrink: 0;
+      padding: 8px 0 16px; flex-shrink: 0;
     }
     #lightbox-close {
       position: fixed; top: 20px; right: 24px;
@@ -1142,7 +1146,7 @@
             `<div class="carousel-dot${si === 0 ? ' active' : ''}"></div>`
           ).join('')}</div>`;
         } else if (imgs && imgs.length === 1) {
-          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">`;
+          cardBg = `<img src="${imgs[0]}" alt="${p.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;display:block;">`;
         } else {
           cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#1a1a1a'}"></div>`;
         }
@@ -1643,7 +1647,9 @@
   <div id="lightbox" role="dialog" aria-modal="true">
     <button id="lightbox-close" aria-label="Close">✕</button>
     <button id="lightbox-prev" aria-label="Previous">‹</button>
-    <img id="lb-main-img" src="" alt="" draggable="false">
+    <div id="lb-img-frame">
+      <img id="lb-main-img" src="" alt="" draggable="false">
+    </div>
     <button id="lightbox-next" aria-label="Next">›</button>
     <div id="lightbox-info">
       <div id="lightbox-title"></div>
