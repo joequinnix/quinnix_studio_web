@@ -397,22 +397,23 @@
       overflow: hidden; box-sizing: border-box;
     }
 
-    /* Wrapper takes ALL remaining height after caption — image fits inside it */
+    /* Frame: flex:1 fills all space after caption; explicit vw width */
     #lb-img-frame {
       flex: 1;
-      min-height: 0;           /* allow shrink below content size */
-      width: calc(100% - 140px); /* 70px each side for arrow buttons */
-      margin-top: 64px;        /* clear the fixed ✕ button */
+      min-height: 0;
+      width: calc(100vw - 140px); /* 70px each side for ‹ › buttons */
+      margin-top: 64px;           /* clear the fixed ✕ button */
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
     }
 
+    /* Image: max-height uses viewport units directly — no parent-height dependency */
     #lb-main-img {
       display: block;
-      max-width: 100%;
-      max-height: 100%;        /* constrained by flex:1 wrapper — never clips */
+      max-width: 100%;                  /* 100% of frame's explicit vw width */
+      max-height: calc(100vh - 180px);  /* 64px margin + 86px caption + 30px gap */
       width: auto; height: auto;
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
