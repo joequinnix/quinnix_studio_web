@@ -399,24 +399,22 @@
       overflow: hidden; box-sizing: border-box;
     }
 
-    /* Frame: flex:1 fills all space after caption; explicit vw width */
+    /* Frame: fills all vertical space; image positioned absolutely inside */
     #lb-img-frame {
       flex: 1;
       min-height: 0;
       width: calc(100vw - 140px); /* 70px each side for ‹ › buttons */
       margin-top: 64px;           /* clear the fixed ✕ button */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      position: relative;         /* abs-positioned image anchors here */
     }
 
-    /* Image: max-height uses viewport units directly — no parent-height dependency */
+    /* Image: fills frame via object-fit:contain — never crops, never overflows */
     #lb-main-img {
-      display: block;
-      max-width: 100%;                  /* 100% of frame's explicit vw width */
-      max-height: calc(100vh - 180px);  /* 64px margin + 86px caption + 30px gap */
-      width: auto; height: auto;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;        /* full image always visible, letterbox = black bg */
       border-radius: 4px;
       user-select: none; -webkit-user-drag: none;
       transition: opacity 0.25s ease;
