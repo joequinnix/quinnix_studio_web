@@ -421,27 +421,31 @@
       background: rgba(0,0,0,0.96);
     }
     #lightbox.open {
-      display: flex; flex-direction: column; align-items: center;
-      overflow: hidden; box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* Padding clears all chrome: top = ✕ btn, sides = ‹ › btns, bottom = caption */
+      padding: 68px 80px 8px;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    /* Frame: fills all vertical space; image positioned absolutely inside */
+    /* Frame: fills remaining height after padding; image anchors inside it */
     #lb-img-frame {
       flex: 1;
       min-height: 0;
-      width: calc(100vw - 140px); /* 70px each side for ‹ › buttons */
-      margin-top: 64px;           /* clear the fixed ✕ button */
-      position: relative;         /* abs-positioned image anchors here */
+      width: 100%;            /* fills the padded container */
+      position: relative;
     }
 
-    /* Image: fills frame via object-fit:contain — never crops, never overflows */
+    /* Image: fills frame with contain — full image always visible, no clipping */
     #lb-main-img {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;        /* full image always visible, letterbox = black bg */
-      border-radius: 4px;
+      object-fit: contain;
+      object-position: center;
       user-select: none; -webkit-user-drag: none;
       transition: opacity 0.25s ease;
     }
@@ -450,11 +454,11 @@
     /* Caption */
     #lightbox-info {
       text-align: center; pointer-events: none;
-      padding: 12px 40px 0; flex-shrink: 0;
+      padding: 10px 40px 0; flex-shrink: 0;
     }
     #lightbox-counter {
       display: flex; gap: 8px; align-items: center; justify-content: center;
-      padding: 8px 0 16px; flex-shrink: 0;
+      padding: 6px 0 12px; flex-shrink: 0;
     }
     #lightbox-close {
       position: fixed; top: 20px; right: 24px;
