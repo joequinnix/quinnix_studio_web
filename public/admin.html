@@ -234,15 +234,16 @@
     /* ── Image gallery ────────────────────────────────────────────────────── */
     .img-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; min-height: 0; }
     .img-thumb {
-      position: relative; width: 150px; height: 106px; border-radius: 6px; overflow: hidden;
-      border: 2px solid transparent; cursor: grab; transition: border-color 0.15s, opacity 0.15s, transform 0.15s; flex-shrink: 0;
+      position: relative; width: 150px; aspect-ratio: 1191 / 842; border-radius: 6px; overflow: hidden;
+      outline: 2px solid transparent; /* outline doesn't affect layout — ratio stays exact */
+      cursor: grab; transition: outline-color 0.15s, opacity 0.15s, transform 0.15s; flex-shrink: 0;
       background: #0a0a0a;
     }
     .img-thumb:active { cursor: grabbing; }
     .img-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
-    .img-thumb.is-cover { border-color: var(--accent); }
+    .img-thumb.is-cover { outline-color: var(--accent); }
     .img-thumb.img-dragging { opacity: 0.35; transform: scale(0.95); }
-    .img-thumb.img-drag-over { border-color: var(--text); box-shadow: 0 0 0 2px var(--text); }
+    .img-thumb.img-drag-over { outline-color: var(--text); box-shadow: 0 0 0 2px var(--text); }
     .img-thumb-cover-badge {
       position: absolute; bottom: 4px; left: 4px; background: var(--accent); color: var(--bg);
       font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 5px; border-radius: 3px;
