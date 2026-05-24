@@ -317,6 +317,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
+      align-items: start;   /* cards size to their own content — prevents grid-row stretch from breaking aspect-ratio on gradient cards */
     }
     @media (max-width: 768px) {
       .portfolio-grid { grid-template-columns: 1fr; }
@@ -331,6 +332,7 @@
     }
     .card-image {
       aspect-ratio: 1191 / 842;
+      width: 100%;              /* explicit width so aspect-ratio always resolves height correctly */
       position: relative;       /* NO display:flex — prevents Chrome bug with aspect-ratio + abs children */
       overflow: hidden;
       background: #0a0a0a;
