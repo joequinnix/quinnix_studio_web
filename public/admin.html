@@ -910,26 +910,6 @@
     let modalImages = [];   // [{ url, isCover }]
     let uploadBusy = false;
 
-    async function cropTo169(file) {
-      return new Promise(resolve => {
-        const img = new Image();
-        const objUrl = URL.createObjectURL(file);
-        img.onload = () => {
-          const target = 16 / 9;
-          const ratio = img.width / img.height;
-          let sx = 0, sy = 0, sw = img.width, sh = img.height;
-          if (ratio > target) { sw = sh * target; sx = (img.width - sw) / 2; }
-          else { sh = sw / target; sy = (img.height - sh) / 2; }
-          const canvas = document.createElement('canvas');
-          canvas.width = 1280; canvas.height = 720;
-          canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, 1280, 720);
-          URL.revokeObjectURL(objUrl);
-          canvas.toBlob(resolve, 'image/jpeg', 0.88);
-        };
-        img.src = objUrl;
-      });
-    }
-
     async function uploadFiles(files) {
       if (uploadBusy) return;
       uploadBusy = true;
@@ -939,9 +919,8 @@
       for (let i = 0; i < files.length; i++) {
         txt.textContent = `Uploading ${i + 1} of ${files.length}…`;
         try {
-          const blob = await cropTo169(files[i]);
           const form = new FormData();
-          form.append('image', blob, files[i].name.replace(/\.[^.]+$/, '.jpg'));
+          form.append('image', files[i], files[i].name);
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + TOKEN },
