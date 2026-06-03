@@ -341,26 +341,25 @@
       text-decoration: none;
     }
 
-    /* ── Card image — Behance style ───────────────────────────────────── */
-    /* Fixed 4:3 landscape ratio, object-fit:cover — exactly like Behance.
-       Every card is the same height. Images fill the frame completely.
-       No bars. Upload at 4:3 (e.g. 1600×1200, 2400×1800) for zero crop. */
+    /* ── Card image — A3 landscape frame, full image visible ────────────── */
+    /* aspect-ratio: 1191/842 = A3 landscape. object-fit:contain shows the
+       full image without any cropping. Background fills the letterbox areas. */
     .card-image {
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 1191 / 842;
       position: relative;
       overflow: hidden;
-      contain: paint;          /* hard-clips children in all browsers */
+      contain: paint;
       width: 100%;
-      background: #e8e4dd;
+      background: #edeae4;
     }
 
-    /* Every image fills the frame — cover centres and crops to fit */
+    /* Full image visible — no cropping, letterbox where ratio differs */
     .card-image img {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       object-position: center;
       display: block;
     }
@@ -378,7 +377,7 @@
     .carousel-slide img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       object-position: center;
       display: block;
     }
