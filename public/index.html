@@ -341,27 +341,31 @@
       text-decoration: none;
     }
 
-    /* ── Card image — A3 landscape frame, full image visible ────────────── */
-    /* aspect-ratio: 1191/842 = A3 landscape. object-fit:contain shows the
-       full image without any cropping. Background fills the letterbox areas. */
+    /* ── Card image — natural ratio, no fixed frame ─────────────────────── */
+    /* No forced aspect-ratio. The card height = image's natural height.
+       Image fills edge-to-edge, exactly as uploaded. No cropping, no bars. */
     .card-image {
-      aspect-ratio: 1191 / 842;
       position: relative;
-      overflow: hidden;
-      contain: paint;
       width: 100%;
+      overflow: hidden;
       background: #edeae4;
     }
 
-    /* Full image visible — no cropping, letterbox where ratio differs */
-    .card-image img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center;
+    /* Single image: natural width/height — card sizes to the image */
+    .card-image > img.card-main-img {
       display: block;
+      width: 100%;
+      height: auto;
+      position: relative;
+    }
+
+    /* Carousel sizer: hidden first image sets the container height */
+    .carousel-sizer {
+      display: block;
+      width: 100%;
+      height: auto;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .card-image-inner { position: absolute; inset: 0; transition: opacity 0.4s ease; }
@@ -377,7 +381,7 @@
     .carousel-slide img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       object-position: center;
       display: block;
     }
@@ -1170,21 +1174,23 @@
 
         let cardBg, dotsHtml = '';
         if (imgs && imgs.length > 1) {
-          // Multiple images: carousel slides, all cover the fixed 4:3 frame
-          cardBg = imgs.map((src, si) =>
+          // Carousel: hidden sizer (first img) sets natural height; slides stack on top
+          const sizer = `<img class="carousel-sizer" src="${imgs[0]}" alt="" aria-hidden="true">`;
+          const slides = imgs.map((src, si) =>
             `<div class="carousel-slide${si === 0 ? ' active' : ''}" data-idx="${si}">
                <img src="${src}" alt="${p.title} ${si + 1}" loading="lazy">
              </div>`
           ).join('');
+          cardBg = sizer + slides;
           dotsHtml = `<div class="carousel-dots">${imgs.map((_, si) =>
             `<div class="carousel-dot${si === 0 ? ' active' : ''}"></div>`
           ).join('')}</div>`;
         } else if (imgs && imgs.length === 1) {
-          // Single image: fills the 4:3 frame with cover
-          cardBg = `<img src="${imgs[0]}" alt="${p.title}" loading="lazy">`;
+          // Single image: natural ratio, card height = image height
+          cardBg = `<img class="card-main-img" src="${imgs[0]}" alt="${p.title}" loading="lazy">`;
         } else {
-          // Gradient: fills the 4:3 CSS frame
-          cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#e8e4dd'}"></div>`;
+          // Gradient fallback
+          cardBg = `<div class="card-image-inner" style="background:${p.gradient || '#e8e4dd'};aspect-ratio:1191/842"></div>`;
         }
 
         return `
