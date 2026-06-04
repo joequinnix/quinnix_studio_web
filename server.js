@@ -6,14 +6,36 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { pool, init } = require('./db');
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+const CLOUDINARY_READY = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (CLOUDINARY_READY) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  console.log('  ✦  Cloudinary storage enabled');
+} else {
+  console.log('  ⚠  Cloudinary not configured — using local disk (images will reset on redeploy)');
+}
+
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const diskStorage = multer.diskStorage({
+  destination: uploadsDir,
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`);
+  }
 });
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: CLOUDINARY_READY ? multer.memoryStorage() : diskStorage,
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     cb(null, file.mimetype.startsWith('image/'));
@@ -21,12 +43,11 @@ const upload = multer({
 });
 
 function cloudinaryPublicId(url) {
-  // e.g. https://res.cloudinary.com/xxx/image/upload/v123/quinnix-studio/abc.jpg
   const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
   return match ? match[1] : null;
 }
 
-function uploadToCloudinary(buffer, mimetype) {
+function uploadToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder: 'quinnix-studio', resource_type: 'image' },
@@ -92,8 +113,12 @@ app.put('/api/content', requireAuth, async (req, res) => {
 app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   try {
-    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
-    res.json({ url: result.secure_url });
+    if (CLOUDINARY_READY) {
+      const result = await uploadToCloudinary(req.file.buffer);
+      res.json({ url: result.secure_url });
+    } else {
+      res.json({ url: `/uploads/${req.file.filename}` });
+    }
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -101,8 +126,12 @@ app.delete('/api/upload', requireAuth, async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'Invalid url' });
   try {
-    const publicId = cloudinaryPublicId(url);
-    if (publicId) await cloudinary.uploader.destroy(publicId);
+    if (CLOUDINARY_READY && url.includes('cloudinary.com')) {
+      const publicId = cloudinaryPublicId(url);
+      if (publicId) await cloudinary.uploader.destroy(publicId);
+    } else if (url.startsWith('/uploads/')) {
+      fs.unlinkSync(path.join(__dirname, 'public', url));
+    }
   } catch {}
   res.json({ success: true });
 });
