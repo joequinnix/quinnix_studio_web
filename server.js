@@ -3,25 +3,38 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const { pool, init } = require('./db');
 
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: uploadsDir,
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`);
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 const upload = multer({
-  storage,
-  limits: { fileSize: 15 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     cb(null, file.mimetype.startsWith('image/'));
   }
 });
+
+function cloudinaryPublicId(url) {
+  // e.g. https://res.cloudinary.com/xxx/image/upload/v123/quinnix-studio/abc.jpg
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+  return match ? match[1] : null;
+}
+
+function uploadToCloudinary(buffer, mimetype) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'quinnix-studio', resource_type: 'image' },
+      (err, result) => err ? reject(err) : resolve(result)
+    );
+    stream.end(buffer);
+  });
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -76,15 +89,21 @@ app.put('/api/content', requireAuth, async (req, res) => {
 });
 
 // ── Image Upload ──────────────────────────────────────────────────────────────
-app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
+app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  res.json({ url: `/uploads/${req.file.filename}` });
+  try {
+    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
+    res.json({ url: result.secure_url });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/upload', requireAuth, (req, res) => {
+app.delete('/api/upload', requireAuth, async (req, res) => {
   const { url } = req.body;
-  if (!url || !url.startsWith('/uploads/')) return res.status(400).json({ error: 'Invalid url' });
-  try { fs.unlinkSync(path.join(__dirname, 'public', url)); } catch {}
+  if (!url) return res.status(400).json({ error: 'Invalid url' });
+  try {
+    const publicId = cloudinaryPublicId(url);
+    if (publicId) await cloudinary.uploader.destroy(publicId);
+  } catch {}
   res.json({ success: true });
 });
 
