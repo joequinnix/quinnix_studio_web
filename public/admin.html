@@ -926,9 +926,13 @@
             headers: { 'Authorization': 'Bearer ' + TOKEN },
             body: form
           });
-          const { url } = await res.json();
+          const data = await res.json();
+          if (!res.ok || !data.url) {
+            toast('Upload failed: ' + (data.error || 'Server error'));
+            continue;
+          }
           const isCover = modalImages.length === 0;
-          modalImages.push({ url, isCover });
+          modalImages.push({ url: data.url, isCover });
         } catch (err) { toast('Upload failed: ' + files[i].name); }
       }
       prog.classList.remove('show');
