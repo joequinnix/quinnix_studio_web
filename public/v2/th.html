@@ -534,7 +534,7 @@ function render(list){
   });
   rail.scrollLeft=0;upd();
 }
-fetch('/api/portfolio',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(Array.isArray(d)&&d.length)render(d)}).catch(()=>{});
+fetch('/api/portfolio',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(Array.isArray(d)){const v=d.filter(p=>p.featured!==false);if(v.length)render(v)}}).catch(()=>{});
 fetch('/api/analytics/pageview',{method:'POST'}).catch(()=>{});
 
 /* ───── lightbox ───── */
