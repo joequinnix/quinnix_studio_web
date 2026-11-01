@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>J/ Studio — Admin</title>
+<meta name="robots" content="noindex,nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,600;12..96,800&family=DM+Mono:wght@400;500&family=Anuphan:wght@400;600&display=swap" rel="stylesheet" />
+<!-- Uses the SAME API as /admin (login, portfolio, upload, leads, analytics). Your original /admin is untouched. -->
+<style>
+:root{--bg:#F3F2EE;--ink:#0B0B0A;--mute:#6F6C66;--line:rgba(11,11,10,.16);--hot:#FF4F1F;--soft:#E4E2DB;
+--sans:'Bricolage Grotesque','Anuphan',system-ui,sans-serif;--mono:'DM Mono',ui-monospace,monospace;--pad:clamp(18px,2.8vw,40px);--out:cubic-bezier(.16,1,.3,1);--io:cubic-bezier(.77,0,.18,1)}
+html{overflow-x:clip}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.45;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}ul{list-style:none}img{display:block;width:100%;height:100%;object-fit:cover}
+.mono{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}.slash{color:var(--hot);font-weight:300}
+.logo{font-size:1.7rem;font-weight:800;letter-spacing:-.06em;line-height:1}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:99px;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;transition:transform .4s var(--out),background .3s}
+.btn:hover{transform:scale(1.05) rotate(-1.5deg)}.btn.hot{background:var(--hot);color:var(--ink)}.btn.ghost{background:none;border:1px solid var(--ink);color:var(--ink)}.btn.sm{padding:8px 14px}.btn:disabled{opacity:.4;pointer-events:none}
+.btn.danger:hover{background:#b3200b;color:#fff}
+/* login */
+#login{position:fixed;inset:0;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50;padding:var(--pad)}
+#login .box{width:min(440px,100%)}#login .logo{font-size:clamp(5rem,20vw,9rem);margin-bottom:28px}#login .logo i{font-style:normal;color:var(--hot)}
+#login input{width:100%;background:none;border:0;border-bottom:1px solid rgba(243,242,238,.4);color:var(--bg);font:inherit;font-size:1.3rem;padding:12px 0;outline:0;margin:10px 0 22px}
+#login input:focus{border-color:var(--hot)}#login .err{color:var(--hot);min-height:1.4em;margin-top:14px}
+/* shell */
+#app{display:none}#app.on{display:block}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px var(--pad);background:rgba(243,242,238,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;background:var(--ink);padding:6px;border-radius:99px}
+.tabs button{padding:9px 18px;border-radius:99px;color:var(--bg);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;transition:background .3s,color .3s;position:relative}
+.tabs button.act,.tabs button:hover{background:var(--bg);color:var(--ink)}
+.tabs .dot{position:absolute;top:4px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--hot)}
+.top .r{display:flex;gap:8px;align-items:center}
+main{padding:0 var(--pad) 120px}
+.sec{display:none}.sec.act{display:block}
+.sh{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:clamp(40px,6vw,80px) 0 26px}
+.sh h2{font-size:clamp(2.6rem,7vw,7rem);font-weight:800;letter-spacing:-.05em;line-height:.9}.sh .mono{color:var(--mute);text-align:right}
+/* work list */
+.list{border-top:1px solid var(--ink)}
+.item{display:grid;grid-template-columns:44px 96px 1fr auto;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid var(--ink);position:relative;background:var(--bg);transition:background .3s}
+.item:hover{background:var(--soft)}.item.drag{opacity:.4}.item.over{box-shadow:0 -3px 0 var(--hot)}
+.item .no{color:var(--hot);cursor:grab}.item .th{aspect-ratio:4/3;background:var(--soft);overflow:hidden;border-radius:3px;display:grid;place-items:center;color:var(--mute)}
+.item h3{font-size:clamp(1.3rem,2.4vw,2.2rem);font-weight:600;letter-spacing:-.035em;line-height:1.05}
+.item h3 small{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:400;margin-top:6px}
+.item .act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:inline-block;border:1px solid var(--ink);border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}.pill.hot{background:var(--hot);border-color:var(--hot)}
+.empty{padding:60px 0;color:var(--mute)}
+/* leads */
+.lead{display:grid;grid-template-columns:110px 1fr auto;gap:20px;padding:20px 0;border-bottom:1px solid var(--ink)}
+.lead.new .st{color:var(--hot)}.lead h3{font-size:1.5rem;font-weight:600;letter-spacing:-.03em}.lead p{margin-top:8px;max-width:70ch;white-space:pre-wrap;color:#2a2926}
+.lead .meta{color:var(--mute);margin-top:6px}.lead .meta a{text-decoration:underline}
+.seg{display:inline-flex;border:1px solid var(--ink);border-radius:99px;overflow:hidden}.seg button{padding:7px 12px;font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em}.seg button.on{background:var(--ink);color:var(--bg)}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+.stats div{padding:24px 16px 24px 0;border-bottom:1px solid var(--ink)}.stats b{display:block;font-size:clamp(2.8rem,7vw,6.5rem);font-weight:800;letter-spacing:-.05em;line-height:1}.stats b sup{color:var(--hot);font-weight:300}.stats span{color:var(--mute)}
+.bars{display:flex;align-items:flex-end;gap:4px;height:180px;margin-top:40px;border-bottom:1px solid var(--ink)}
+.bars i{flex:1;background:var(--ink);min-height:2px;position:relative;transition:background .2s}.bars i:hover{background:var(--hot)}.bars i:hover::after{content:attr(data-t);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:3px 7px;font:.68rem var(--mono);white-space:nowrap;border-radius:3px;margin-bottom:4px}
+/* modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(11,11,10,.55);display:none;justify-content:flex-end}.modal.on{display:flex}
+.panel{width:min(720px,100%);height:100%;overflow:auto;background:var(--bg);padding:var(--pad);animation:in .6s var(--out)}@keyframes in{from{transform:translateX(100%)}}
+.panel h2{font-size:clamp(2rem,4vw,3.4rem);font-weight:800;letter-spacing:-.05em;line-height:1;margin-bottom:26px}
+label{display:block;margin-top:20px;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+input[type=text],input[type=url],textarea,select{width:100%;background:none;border:0;border-bottom:1px solid var(--ink);padding:10px 0;font:inherit;font-size:1.05rem;color:var(--ink);outline:0;border-radius:0}
+input:focus,textarea:focus{border-color:var(--hot)}textarea{min-height:110px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.drop{margin-top:10px;border:1px dashed var(--ink);padding:26px;text-align:center;border-radius:4px;transition:background .3s}.drop.hov{background:var(--soft);border-color:var(--hot)}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:14px}
+.im{aspect-ratio:1;position:relative;overflow:hidden;border-radius:3px;background:var(--soft)}.im.cover{outline:3px solid var(--hot)}
+.im .bt{position:absolute;inset:auto 0 0 0;display:flex;justify-content:space-between;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.im .bt button{color:#fff;font:.62rem var(--mono);text-transform:uppercase;padding:3px 5px}.im .bt button:hover{color:var(--hot)}
+.chk{display:flex;gap:10px;align-items:center;margin-top:22px;text-transform:none;font-family:var(--sans);font-size:1rem;color:var(--ink);letter-spacing:0}
+.chk input{accent-color:var(--hot);width:18px;height:18px}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.swatches button{width:34px;height:34px;border-radius:50%;border:2px solid transparent}.swatches button.on{border-color:var(--hot);box-shadow:0 0 0 2px var(--bg) inset}
+.foot{display:flex;gap:10px;margin-top:34px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:99px;opacity:0;transition:.5s var(--out);z-index:90;pointer-events:none}#toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){.item{grid-template-columns:70px 1fr}.item .no{display:none}.item .act{grid-column:1/-1;justify-content:flex-start}.lead{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.top .btn.ghost.view{display:none}.tabs button{padding:8px 12px}}
+:lang(th){line-height:1.7}
+</style>
+</head>
+<body>
+
+<section id="login">
+  <div class="box">
+    <div class="logo">J<i>/</i></div>
+    <span class="mono">Studio admin</span>
+    <input id="pw" type="password" placeholder="Password" autocomplete="current-password" />
+    <button class="btn hot" id="go">Enter ↗</button>
+    <div class="err mono" id="err"></div>
+  </div>
+</section>
+
+<div id="app">
+  <header class="top">
+    <a class="logo" href="index.html" title="View site">J<span class="slash">/</span></a>
+    <nav class="tabs" id="tabs">
+      <button data-t="work" class="act">Work</button>
+      <button data-t="leads">Leads<span class="dot" id="ldot" hidden></span></button>
+      <button data-t="stats">Stats</button>
+    </nav>
+    <div class="r"><a class="btn ghost sm view" href="index.html" target="_blank">View site ↗</a><button class="btn sm" id="out">Log out</button></div>
+  </header>
+
+  <main>
+    <section class="sec act" id="s-work">
+      <div class="sh"><h2>Work<span class="slash">/</span></h2><div><span class="mono" id="wcount"></span><br><br><button class="btn hot" id="add">New project +</button></div></div>
+      <p class="mono" style="color:var(--mute);margin-bottom:16px">Drag the number to reorder · the first project appears first on the site</p>
+      <div class="list" id="list"></div>
+    </section>
+
+    <section class="sec" id="s-leads">
+      <div class="sh"><h2>Leads<span class="slash">/</span></h2><span class="mono" id="lcount"></span></div>
+      <div id="leads" style="border-top:1px solid var(--ink)"></div>
+    </section>
+
+    <section class="sec" id="s-stats">
+      <div class="sh"><h2>Stats<span class="slash">/</span></h2><span class="mono">Last 30 days</span></div>
+      <div class="stats" id="stats"></div>
+      <div class="bars" id="bars"></div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal"><div class="panel">
+  <h2 id="mt">New project</h2>
+  <label>Title<input type="text" id="f-title" maxlength="120"></label>
+  <div class="two"><label>Category<input type="text" id="f-cat" placeholder="Footwear"></label><label>Year<input type="text" id="f-year" placeholder="2025"></label></div>
+  <label>Tags (comma separated)<input type="text" id="f-tags" placeholder="Footwear, Textile"></label>
+  <label>Description<textarea id="f-desc"></textarea></label>
+  <label>Link (optional)<input type="url" id="f-url" placeholder="https://"></label>
+  <label>Card colour (shown if there is no image)</label><div class="swatches" id="sw"></div>
+  <label>Images</label>
+  <div class="drop" id="drop"><span class="mono">Drop images here or <u style="cursor:pointer" id="pick">browse</u></span><input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden></div>
+  <div class="imgs" id="imgs"></div>
+  <label class="chk"><input type="checkbox" id="f-feat" checked> Featured on the site</label>
+  <div class="foot"><button class="btn hot" id="save">Save ↗</button><button class="btn ghost" id="cancel">Cancel</button></div>
+</div></div>
+<div id="toast" class="mono"></div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const GRADS=['linear-gradient(135deg, #1a2830 0%, #0a1520 100%)','linear-gradient(135deg, #0e4d4d 0%, #072d2d 100%)','linear-gradient(135deg, #3a1f14 0%, #1a0d08 100%)','linear-gradient(135deg, #14243a 0%, #0a1220 100%)','linear-gradient(135deg, #1f3a2c 0%, #0c1c14 100%)','linear-gradient(135deg, #3a2a14 0%, #1c1408 100%)','linear-gradient(135deg, #2a1a3a 0%, #120a1c 100%)','linear-gradient(135deg, #222 0%, #0b0b0a 100%)'];
+let TOKEN='';try{TOKEN=localStorage.getItem('studio_token')||''}catch(e){}
+let items=[],leads=[],cur=null,imgs=[],pendingDelete=[],grad=GRADS[0],busy=false;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2600)};
+const thumb=(u,w)=>u&&u.includes('/upload/')?u.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'):u;
+
+class AuthErr extends Error{}
+async function api(method,path,body){
+  const r=await fetch(path,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:body?JSON.stringify(body):undefined});
+  if(r.status===401){lock();throw new AuthErr('Session expired — please log in again.')}
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.error||('Error '+r.status));
+  return j;
+}
+function lock(msg){TOKEN='';try{localStorage.removeItem('studio_token')}catch(e){}$('#app').classList.remove('on');$('#login').style.display='flex';if(msg)$('#err').textContent=msg}
+async function login(){
+  const pw=$('#pw').value;if(!pw){$('#err').textContent='Enter your password.';return}
+  try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});const j=await r.json().catch(()=>({}));
+    if(!j.token){$('#err').textContent='Incorrect password.';return}
+    TOKEN=j.token;try{localStorage.setItem('studio_token',TOKEN)}catch(e){}$('#pw').value='';$('#err').textContent='';start();
+  }catch(e){$('#err').textContent='Could not reach the server.'}
+}
+$('#go').onclick=login;$('#pw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+$('#out').onclick=()=>{api('POST','/api/auth/logout').catch(()=>{});lock()};
+async function start(){
+  $('#login').style.display='none';$('#app').classList.add('on');
+  try{await Promise.all([loadWork(),loadLeads(),loadStats()])}catch(e){if(!(e instanceof AuthErr))toast(e.message)}
+}
+(async()=>{if(!TOKEN)return;try{await api('GET','/api/auth/check');start()}catch(e){lock()}})();
+
+/* tabs */
+$$('#tabs button').forEach(b=>b.onclick=()=>{$$('#tabs button').forEach(x=>x.classList.toggle('act',x===b));$$('.sec').forEach(s=>s.classList.toggle('act',s.id==='s-'+b.dataset.t))});
+
+/* work */
+async function loadWork(){const r=await fetch('/api/portfolio');items=await r.json();if(!Array.isArray(items))items=[];renderWork()}
+function renderWork(){
+  $('#wcount').textContent=items.length+' project'+(items.length===1?'':'s');
+  const L=$('#list');
+  if(!items.length){L.innerHTML='<div class="empty">No projects yet. Click “New project +” to add your first one.</div>';return}
+  L.innerHTML=items.map((p,i)=>{const c=p.coverImage||(p.images||[])[0];
+    return `<div class="item" draggable="true" data-id="${esc(p.id)}"><span class="no mono">${String(i+1).padStart(2,'0')} ⋮⋮</span>
+    <div class="th" style="${c?'':'background:'+esc(p.gradient||GRADS[0])}">${c?`<img src="${esc(thumb(c,300))}" alt="" loading="lazy">`:''}</div>
+    <h3>${esc(p.title)}${p.featured===false?'<span class="pill mono">Hidden</span>':''}<small>${esc([p.category,p.year,(p.images||[]).length+' img'].filter(Boolean).join(' · '))}</small></h3>
+    <div class="act"><button class="btn sm ghost" data-a="edit">Edit</button><button class="btn sm ghost" data-a="dup">Duplicate</button><button class="btn sm ghost danger" data-a="del">Delete</button></div></div>`}).join('');
+}
+$('#list').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-a]');if(!b)return;const id=b.closest('.item').dataset.id,p=items.find(x=>String(x.id)===id);
+  try{
+    if(b.dataset.a==='edit')openModal(p);
+    else if(b.dataset.a==='dup'){await api('POST',`/api/portfolio/${id}/duplicate`);await loadWork();toast('Duplicated')}
+    else if(b.dataset.a==='del'&&confirm(`Delete “${p.title}”? This cannot be undone.`)){await api('DELETE','/api/portfolio/'+id);
+      // images are removed only after the project record is gone
+      for(const u of (p.images||[]))api('DELETE','/api/upload',{url:u}).catch(()=>{});await loadWork();toast('Deleted')}
+  }catch(err){toast(err.message)}
+});
+let dragId=null;
+$('#list').addEventListener('dragstart',e=>{const it=e.target.closest('.item');if(!it)return;dragId=it.dataset.id;it.classList.add('drag');e.dataTransfer.effectAllowed='move'});
+$('#list').addEventListener('dragend',e=>{$$('.item').forEach(x=>x.classList.remove('drag','over'))});
+$('#list').addEventListener('dragover',e=>{const it=e.target.closest('.item');if(!it||!dragId)return;e.preventDefault();$$('.item').forEach(x=>x.classList.toggle('over',x===it&&x.dataset.id!==dragId))});
+$('#list').addEventListener('drop',async e=>{
+  const it=e.target.closest('.item');if(!it||!dragId||it.dataset.id===dragId)return;e.preventDefault();
+  const from=items.findIndex(x=>String(x.id)===dragId),to=items.findIndex(x=>String(x.id)===it.dataset.id);
+  const prev=items.slice();items.splice(to,0,items.splice(from,1)[0]);renderWork();dragId=null;
+  try{await api('PUT','/api/portfolio/reorder',{order:items.map(x=>x.id)});toast('Order saved')}catch(err){items=prev;renderWork();toast(err.message)}
+});
+
+/* modal */
+function openModal(p){
+  cur=p||null;pendingDelete=[];$('#mt').textContent=p?'Edit project':'New project';
+  $('#f-title').value=p?.title||'';$('#f-cat').value=p?.category||'';$('#f-year').value=p?.year||'';$('#f-tags').value=(p?.tags||[]).join(', ');
+  $('#f-desc').value=p?.description||'';$('#f-url').value=p?.url||'';$('#f-feat').checked=p?p.featured!==false:true;
+  grad=p?.gradient||GRADS[0];const cover=p?.coverImage||(p?.images||[])[0];
+  imgs=(p?.images||(p?.coverImage?[p.coverImage]:[])).map(u=>({url:u,cover:u===cover}));if(imgs.length&&!imgs.some(i=>i.cover))imgs[0].cover=true;
+  renderSw();renderImgs();$('#modal').classList.add('on');
+}
+function closeModal(){$('#modal').classList.remove('on');pendingDelete=[]}
+$('#add').onclick=()=>openModal(null);$('#cancel').onclick=closeModal;
+$('#modal').addEventListener('mousedown',e=>{if(e.target.id==='modal')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+function renderSw(){$('#sw').innerHTML=GRADS.map(g=>`<button type="button" class="${g===grad?'on':''}" style="background:${g}" data-g="${esc(g)}" aria-label="Card colour"></button>`).join('')}
+$('#sw').onclick=e=>{const b=e.target.closest('button');if(b){grad=b.dataset.g;renderSw()}};
+function renderImgs(){
+  $('#imgs').innerHTML=imgs.map((m,i)=>`<div class="im ${m.cover?'cover':''}"><img src="${esc(thumb(m.url,240))}" alt=""><div class="bt"><button type="button" data-i="${i}" data-k="c">${m.cover?'Cover ✓':'Make cover'}</button><button type="button" data-i="${i}" data-k="x">Remove</button></div></div>`).join('');
+}
+$('#imgs').onclick=e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
+  if(b.dataset.k==='c'){imgs.forEach((m,j)=>m.cover=j===i)}
+  else{const [m]=imgs.splice(i,1);pendingDelete.push(m.url);if(m.cover&&imgs[0])imgs[0].cover=true}
+  renderImgs()};
+$('#pick').onclick=()=>$('#file').click();$('#file').onchange=e=>{upload([...e.target.files]);e.target.value=''};
+['dragenter','dragover'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.add('hov')}));
+['dragleave','drop'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.remove('hov')}));
+$('#drop').addEventListener('drop',e=>upload([...e.dataTransfer.files]));
+async function upload(files){
+  files=files.filter(f=>/^image\/(jpeg|png|webp)$/.test(f.type));if(!files.length){toast('Only JPG, PNG or WebP');return}
+  busy=true;$('#save').disabled=true;
+  for(let i=0;i<files.length;i++){
+    toast(`Uploading ${i+1} of ${files.length}…`);
+    try{const fd=new FormData();fd.append('image',files[i],files[i].name);
+      const r=await fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});
+      if(r.status===401){lock('Session expired — log in again (your unsaved edits were lost).');return}
+      const j=await r.json().catch(()=>({}));if(!r.ok||!j.url){toast('Upload failed: '+(j.error||r.status));continue}
+      imgs.push({url:j.url,cover:!imgs.length});renderImgs();
+    }catch(e){toast('Upload failed')}
+  }
+  busy=false;$('#save').disabled=false;toast('Upload complete');
+}
+$('#save').onclick=async()=>{
+  if(busy)return;const title=$('#f-title').value.trim();if(!title){toast('Title is required');return}
+  const cv=imgs.find(i=>i.cover)||imgs[0];
+  const data={title,category:$('#f-cat').value.trim(),year:$('#f-year').value.trim(),tags:$('#f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    description:$('#f-desc').value.trim(),url:$('#f-url').value.trim(),featured:$('#f-feat').checked,gradient:grad,images:imgs.map(i=>i.url),coverImage:cv?cv.url:null};
+  $('#save').disabled=true;
+  try{
+    if(cur)await api('PUT','/api/portfolio/'+cur.id,data);else await api('POST','/api/portfolio',data);
+    for(const u of pendingDelete)api('DELETE','/api/upload',{url:u}).catch(()=>{});   // only after a successful save
+    closeModal();await loadWork();toast('Saved');
+  }catch(e){toast(e.message)}finally{$('#save').disabled=false}
+};
+
+/* leads */
+const fmt=d=>{try{return new Date(d).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}catch(e){return ''}};
+async function loadLeads(){leads=await api('GET','/api/leads');if(!Array.isArray(leads))leads=[];renderLeads()}
+function renderLeads(){
+  const n=leads.filter(l=>l.status==='new').length;$('#lcount').textContent=leads.length+' total · '+n+' new';$('#ldot').hidden=!n;
+  const L=$('#leads');if(!leads.length){L.innerHTML='<div class="empty">No messages yet. The contact form on your site lands here.</div>';return}
+  L.innerHTML=leads.map(l=>`<div class="lead ${esc(l.status)}" data-id="${esc(l.id)}"><div><span class="mono st">${esc(l.status||'new')}</span><div class="mono meta">${esc(fmt(l.date||l.created_at))}</div></div>
+   <div><h3>${esc(l.name)}${l.company?` <span style="color:var(--mute);font-weight:400">· ${esc(l.company)}</span>`:''}</h3>
+   <div class="mono meta"><a href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.project?' · '+esc(l.project):''}${l.budget?' · '+esc(l.budget):''}</div><p>${esc(l.message)}</p></div>
+   <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><div class="seg">${['new','contacted','closed'].map(s=>`<button data-s="${s}" class="${l.status===s?'on':''}">${s}</button>`).join('')}</div><button class="btn sm ghost danger" data-d="1">Delete</button></div></div>`).join('');
+}
+$('#leads').addEventListener('click',async e=>{
+  const row=e.target.closest('.lead');if(!row)return;const id=row.dataset.id,s=e.target.closest('[data-s]'),d=e.target.closest('[data-d]');
+  try{if(s){await api('PUT','/api/leads/'+id,{status:s.dataset.s});const l=leads.find(x=>String(x.id)===id);if(l)l.status=s.dataset.s;renderLeads()}
+    else if(d&&confirm('Delete this message?')){await api('DELETE','/api/leads/'+id);leads=leads.filter(x=>String(x.id)!==id);renderLeads()}
+  }catch(err){toast(err.message)}
+});
+
+/* stats */
+async function loadStats(){
+  const a=await api('GET','/api/analytics');
+  const ml=Array.isArray(a.monthlyLeads)?(a.monthlyLeads.find(m=>m.month===new Date().toISOString().slice(0,7))||{}).count:a.monthlyLeads;
+  const box=[[a.pageViews,'Page views'],[ml,'Leads this month'],[a.newLeads,'New leads'],[a.portfolioItems,'Projects']];
+  $('#stats').innerHTML=box.map(([v,l])=>`<div><b>${esc(v??0)}<sup>/</sup></b><span class="mono">${l}</span></div>`).join('');
+  const dv=a.dailyViews||{};const days=Array.isArray(dv)?dv.map(x=>[String(x.date).slice(0,10),x.count]):Object.entries(dv).sort();
+  const last=days.slice(-30),mx=Math.max(1,...last.map(d=>+d[1]||0));
+  $('#bars').innerHTML=last.map(([d,v])=>`<i style="height:${Math.max(2,(+v||0)/mx*100)}%" data-t="${esc(d)} · ${esc(v)}"></i>`).join('')||'<span class="mono" style="color:var(--mute);align-self:center;margin:auto">No data yet</span>';
+}
+})();
+</script>
+</body>
+</html>
